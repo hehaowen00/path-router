@@ -93,6 +93,6 @@ path router implements the `Handle` method which allows using the std library
 r := pathrouter.NewRouter()
 
 r.Handle("GET", "/handle", http.HandleFunc(func (w http.ResponseWriter, r *http.Request) {
-    ps := r.Context().Value(pathrouter.ParamsKey)
+    ps := r.Context().Value(pathrouter.ParamsKey).(*pathrouter.Params)
 })
 ```

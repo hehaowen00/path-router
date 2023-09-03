@@ -146,3 +146,25 @@ func TestRouterParams(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestRouterHandle(t *testing.T) {
+	success := false
+
+	url := "/param/:value"
+	req := httptest.NewRequest(http.MethodGet, "/param/true", nil)
+	w := httptest.NewRecorder()
+
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ps := r.Context().Value(ParamsKey).(*Params)
+		value := ps.Get("value")
+		success = value == "true"
+	})
+
+	router := NewRouter()
+	router.Handle(http.MethodGet, url, h)
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.Fail()
+	}
+}
