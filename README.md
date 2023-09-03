@@ -84,3 +84,15 @@ adding another route with the same special path segment will overwrite the previ
 /special/:b
 ```
 
+- compatibility
+
+path router implements the `Handle` method which allows using the std library
+`http.Handler` to add routes
+
+```go
+r := pathrouter.NewRouter()
+
+r.Handle("GET", "/handle", http.HandleFunc(func (w http.ResponseWriter, r *http.Request) {
+    ps := r.Context().Value(pathrouter.ParamsKey)
+})
+```
