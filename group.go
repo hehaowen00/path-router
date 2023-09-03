@@ -42,7 +42,7 @@ func (g *Group) addRoute(method, path string, handler HandlerFunc) {
 func (g *Group) call(r *Router, callback func(g *Group)) {
 	callback(g)
 	for _, route := range g.routes {
-		handler := addMiddleware(route.handler, g.middleware)
+		handler := applyMiddleware(route.handler, g.middleware)
 		r.getMethodHandler(route.method).Insert(route.path, handler)
 	}
 }
@@ -73,14 +73,4 @@ func (g *Group) Connect(path string, handler HandlerFunc) {
 
 func (g *Group) Use(middleware ...MiddlewareFunc) {
 	g.middleware = append(g.middleware, middleware...)
-}
-
-func addMiddleware(handler HandlerFunc, middleware []MiddlewareFunc) HandlerFunc {
-	for _, middleware := range middleware {
-		handler = middleware(handler)
-	}
-
-	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		handler(w, r, ps)
-	}
 }
