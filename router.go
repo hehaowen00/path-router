@@ -46,13 +46,16 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addMiddleware(*handler, r.middleware)(w, req, ps)
-	defer ps.release()
+	applyMiddleware(*handler, r.middleware)(w, req, ps)
 }
 
 func (r *Router) Group(prefix string, callback func(*Group)) {
 	g := newGroup(prefix)
 	g.call(r, callback)
+}
+
+func (r *Router) Use(middleware ...MiddlewareFunc) {
+	r.middleware = append(r.middleware, middleware...)
 }
 
 func (r *Router) Get(path string, handler HandlerFunc) {

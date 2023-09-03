@@ -168,3 +168,29 @@ func TestRouterHandle(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestRouterMiddleware(t *testing.T) {
+	success := false
+
+	url := "/"
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	}
+
+	middleware := func(next HandlerFunc) HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+			success = true
+		}
+	}
+
+	router := NewRouter()
+	router.Use(middleware)
+	router.Get(url, h)
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.Fail()
+	}
+}

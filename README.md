@@ -12,6 +12,22 @@ r.Get("/", func(w http.ResponseWriter, req *http.Request, ps *pathrouter.Params)
 log.Fatal(http.ListenAndServe(":8000", r))
 ```
 
+- middleware
+
+middleware can be added using the `use` method
+
+```go
+func logger(next HandlerFunc) HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+        log.Println(r.Method, r.URL.String())
+        next(w, r)
+    }
+}
+
+r := pathrouter.NewRouter()
+r.Use(logger)
+```
+
 - groups
 
 groups in path router allow url path prefixing and middleware scoped to urls
