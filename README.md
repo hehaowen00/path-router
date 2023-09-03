@@ -86,8 +86,7 @@ adding another route with the same special path segment will overwrite the previ
 
 - compatibility
 
-path router implements the `Handle` method which allows using the std library
-`http.Handler` to add routes
+path router implements the `Handle` method to add `http.Handler` routes
 
 ```go
 r := pathrouter.NewRouter()

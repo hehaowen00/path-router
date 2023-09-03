@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type HandlerFunc func(http.ResponseWriter, *http.Request, *Params)
+type HandlerFunc func(w http.ResponseWriter, r *http.Request, ps *Params)
 
 type MiddlewareFunc func(HandlerFunc) HandlerFunc
 
