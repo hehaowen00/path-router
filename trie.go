@@ -20,21 +20,29 @@ func (t *trie[v]) Get(path *string, ps *Params) *v {
 	n := t.root
 
 start:
-	if len(*path) > 0 && []rune(*path)[0] == rune('/') {
-		trimSlash(path)
+	if len(*path) > 0 && (*path)[0] == '/' {
+		*path = string((*path)[1:])
 	}
 	if len(*path) == 0 || *path == "/" {
 		return n.value
 	}
 
 	for i, v := range n.lut {
-		// fmt.Println("lut", string(v), string((*path)[0]))
 		if v == (*path)[0] {
 			for _, v := range n.children[i:] {
-				// fmt.Println("visit", v.path, v.param, v.wildcard, *path)
 				if v.matchPath(path, ps) {
 					n = v
-					removeSegment(path)
+					idx := -1
+					for i := 0; i < len(*path); i++ {
+						if (*path)[i] == '/' {
+							idx = i
+							break
+						}
+					}
+
+					if idx != -1 {
+						*path = (*path)[idx:]
+					}
 					goto start
 				}
 			}
@@ -46,19 +54,22 @@ start:
 		}
 		if v == byte('*') {
 			n = n.children[i]
-			removeSegment(path)
+
+			idx := -1
+			for i := 0; i < len(*path); i++ {
+				if (*path)[i] == '/' {
+					idx = i
+					break
+				}
+			}
+
+			if idx != -1 {
+				*path = (*path)[idx:]
+			}
+
 			goto start
 		}
 	}
-
-	// for _, v := range n.children {
-	// 	// fmt.Println("visit", v.path, v.param, v.wildcard, *path)
-	// 	if v.matchPath(path, ps) {
-	// 		n = v
-	// 		removeSegment(path)
-	// 		goto start
-	// 	}
-	// }
 
 	return nil
 }
@@ -134,10 +145,4 @@ func filter[t comparable](slice []t, check func(v t) bool) []t {
 	}
 
 	return result
-}
-
-func trimSlash(s *string) {
-	if *s != "" {
-		*s = string([]rune(*s)[1:])
-	}
 }
