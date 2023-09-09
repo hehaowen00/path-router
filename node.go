@@ -61,7 +61,23 @@ func (n *node[v]) matchPath(path *string, ps *Params) bool {
 	// from the url
 	// return true if matches
 	if n.param {
-		val := removeSegment(path)
+		val := *path
+		idx := -1
+		for i := 0; i < len(*path); i++ {
+			if (*path)[i] == '/' {
+				idx = i
+				break
+			}
+		}
+
+		if idx == -1 {
+			val = *path
+			*path = ""
+		} else {
+			val = (*path)[:idx]
+			*path = (*path)[idx:]
+		}
+
 		ps.Push(n.path, val)
 		return true
 	}
@@ -74,12 +90,31 @@ func (n *node[v]) matchPath(path *string, ps *Params) bool {
 
 	// checks if the url segment is a complete match to the node path
 	pathLen := len(*path)
-	endOfSegmentIndex := strings.Index(*path, "/")
+	endOfSegmentIndex := -1
+	for i := 0; i < len(*path); i++ {
+		if (*path)[i] == '/' {
+			endOfSegmentIndex = i
+			break
+		}
+	}
 	if endOfSegmentIndex == -1 {
 		endOfSegmentIndex = pathLen
 	}
-	if strings.HasPrefix(*path, n.path) && endOfSegmentIndex == len(n.path) {
-		removeSegment(path)
+
+	nLen := len(n.path)
+	if len((*path)) >= nLen && (*path)[:nLen] == n.path && endOfSegmentIndex == nLen {
+		idx := -1
+		for i := 0; i < len(*path); i++ {
+			if (*path)[i] == '/' {
+				idx = i
+				break
+			}
+		}
+
+		if idx == -1 {
+			*path = ""
+		}
+
 		return true
 	}
 
@@ -87,16 +122,22 @@ func (n *node[v]) matchPath(path *string, ps *Params) bool {
 }
 
 func removeSegment(s *string) string {
-	idx := strings.Index(*s, "/")
+	idx := -1
+	for i := 0; i < len(*s); i++ {
+		if (*s)[i] == '/' {
+			idx = i
+			break
+		}
+	}
 
 	if idx == -1 {
-		val := strings.Clone(*s)
+		val := *s
 		*s = ""
 		return val
 	}
 
-	val := string([]rune(*s)[:idx])
-	*s = string([]rune(*s)[idx:])
+	val := (*s)[:idx]
+	*s = (*s)[idx:]
 
 	return val
 }

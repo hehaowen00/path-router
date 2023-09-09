@@ -1,7 +1,6 @@
 package pathrouter
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -17,8 +16,8 @@ func TestTrie_Github(t *testing.T) {
 
 	for i, url := range testURLs[:bounds] {
 		// fmt.Printf("fetch: %v %v\n", i, url)
-		temp := strings.Clone(url)
-		res := trie.Get(&temp, ps)
+		// temp := strings.Clone(url)
+		res := trie.Get(&url, ps)
 		// fmt.Printf("result: %v %v\n", res, i)
 		if res == nil {
 			t.FailNow()
@@ -41,16 +40,11 @@ func BenchmarkTrie_Github(t *testing.B) {
 	ps := newParams()
 	t.ResetTimer()
 
-	for i, url := range testURLs[:bounds] {
-		temp := strings.Clone(url)
-		res := trie.Get(&temp, ps)
-		if res == nil {
-			t.FailNow()
+	for i := 0; i < t.N; i++ {
+		for _, url := range testURLs[:bounds] {
+			trie.Get(&url, ps)
+			ps.clear()
 		}
-		if (*res) != i {
-			t.FailNow()
-		}
-		ps.clear()
 	}
 }
 
