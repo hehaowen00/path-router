@@ -15,7 +15,6 @@ func newTrie[v any]() *trie[v] {
 	return &trie
 }
 
-// matches a url to a node in the trie
 func (t *trie[v]) Get(path *string, ps *Params) *v {
 	n := t.root
 
@@ -47,11 +46,17 @@ start:
 				}
 			}
 		}
+	}
+
+	for i, v := range n.lut {
 		if v == byte(':') {
 			n = n.children[i]
 			n.matchPath(path, ps)
 			goto start
 		}
+	}
+
+	for i, v := range n.lut {
 		if v == byte('*') {
 			n = n.children[i]
 
@@ -74,7 +79,6 @@ start:
 	return nil
 }
 
-// inserts a url into the trie
 func (t *trie[v]) Insert(path string, value v) {
 	if path == "/" {
 		t.root.value = &value
@@ -88,7 +92,6 @@ func (t *trie[v]) Insert(path string, value v) {
 
 	n := t.root
 
-	// if the root node has no children, add the path to the root node
 start:
 	if n.children == nil || len(n.children) == 0 {
 		for _, p := range xs {
@@ -100,12 +103,11 @@ start:
 		n.SetValue(value)
 		return
 	} else {
-		// if the root node has children, check if the first path segment matches any of the children
 		for _, v := range n.children {
 			if v.param {
 				if xs[0][0] == byte(':') {
+					v.SetPath(xs[0])
 					xs = xs[1:]
-					v.path = xs[0][1:]
 					n = v
 					goto start
 				}
@@ -125,7 +127,7 @@ start:
 			}
 		}
 	}
-	// if the first path segment does not match any of the children, add the path to the root node
+
 	for _, p := range xs {
 		child := newNode[v]()
 		child.SetPath(p)

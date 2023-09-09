@@ -1,7 +1,7 @@
 package pathrouter
 
 type Params struct {
-	entries paramMapInterface
+	entries arraymap
 }
 
 type param struct {
@@ -21,21 +21,21 @@ func (ps *Params) Get(name string) string {
 }
 
 func (ps *Params) Push(name, value string) {
-	switch (ps.entries).(type) {
-	case *arraymap:
-		if ps.entries.full() {
-			pMap := newParamMap()
-			arr := ps.entries.(*arraymap)
-			for i := 0; i < int(arr.count); i++ {
-				pMap.push(arr.entries[i].name, arr.entries[i].value)
-				ps.entries = pMap
-			}
-		} else {
-			ps.entries.push(name, value)
-		}
-	case *paramMap:
-		ps.entries.push(name, value)
-	}
+	// switch (ps.entries).(type) {
+	// case *arraymap:
+	// 	if ps.entries.full() {
+	// 		pMap := newParamMap()
+	// 		arr := ps.entries.(*arraymap)
+	// 		for i := 0; i < int(arr.count); i++ {
+	// 			pMap.push(arr.entries[i].name, arr.entries[i].value)
+	// 			ps.entries = pMap
+	// 		}
+	// 	} else {
+	ps.entries.push(name, value)
+	// 	}
+	// case *paramMap:
+	// 	ps.entries.push(name, value)
+	// }
 }
 
 func (ps *Params) clear() {
@@ -54,8 +54,8 @@ type arraymap struct {
 	entries [8]param
 }
 
-func newArrayMap() *arraymap {
-	a := &arraymap{}
+func newArrayMap() arraymap {
+	a := arraymap{}
 	return a
 }
 
