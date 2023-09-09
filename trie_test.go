@@ -1,8 +1,26 @@
 package pathrouter
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 )
+
+func checkParams(path, url string, ps *Params) bool {
+	pathSlice := strings.Split(path, "/")
+	urlSlice := strings.Split(url, "/")
+	if len(pathSlice) != len(urlSlice) {
+		return false
+	}
+	for i := 0; i < len(pathSlice); i++ {
+		if len(pathSlice[i]) > 0 && pathSlice[i][0] == ':' {
+			if ps.Get(pathSlice[i][1:]) != urlSlice[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 func TestTrie_Github(t *testing.T) {
 	trie := newTrie[int]()
@@ -15,14 +33,15 @@ func TestTrie_Github(t *testing.T) {
 	ps := newParams()
 
 	for i, url := range testURLs[:bounds] {
-		// fmt.Printf("fetch: %v %v\n", i, url)
-		// temp := strings.Clone(url)
 		res := trie.Get(&url, ps)
-		// fmt.Printf("result: %v %v\n", res, i)
 		if res == nil {
 			t.FailNow()
 		}
 		if (*res) != i {
+			t.FailNow()
+		}
+		if !checkParams(githubRoutes[i], testURLs[i], ps) {
+			fmt.Println("match failed", i, githubRoutes[i], testURLs[i])
 			t.FailNow()
 		}
 		ps.clear()
