@@ -22,7 +22,7 @@ func TestRouterGet(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -42,7 +42,7 @@ func TestRouterPost(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -62,7 +62,7 @@ func TestRouterPut(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -82,7 +82,7 @@ func TestRouterPatch(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -102,7 +102,7 @@ func TestRouterDelete(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -122,7 +122,7 @@ func TestRouterConnect(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -143,7 +143,7 @@ func TestRouterParams(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -165,7 +165,7 @@ func TestRouterHandle(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
 	}
 }
 
@@ -191,6 +191,33 @@ func TestRouterMiddleware(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
-		t.Fail()
+		t.FailNow()
+	}
+}
+
+func TestRouterGroup(t *testing.T) {
+	success := false
+
+	url := "/api/test"
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		success = true
+	}
+
+	nilHandler := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	}
+
+	router := NewRouter()
+	router.Get("/hello", nilHandler)
+	router.Group("/api", func(g *Group) {
+		g.Get("/test", h)
+	})
+
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.FailNow()
 	}
 }
