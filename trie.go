@@ -31,17 +31,6 @@ start:
 			for _, v := range n.children[i:] {
 				if v.matchPath(path, ps) {
 					n = v
-					idx := -1
-					for i := 0; i < len(*path); i++ {
-						if (*path)[i] == '/' {
-							idx = i
-							break
-						}
-					}
-
-					if idx != -1 {
-						*path = (*path)[idx:]
-					}
 					goto start
 				}
 			}
@@ -51,7 +40,24 @@ start:
 	for i, v := range n.lut {
 		if v == byte(':') {
 			n = n.children[i]
-			n.matchPath(path, ps)
+			idx := -1
+			for i := 0; i < len(*path); i++ {
+				if (*path)[i] == '/' {
+					idx = i
+					break
+				}
+			}
+
+			val := *path
+			if idx != -1 {
+				val = (*path)[:idx]
+				*path = (*path)[idx:]
+			} else {
+				val = *path
+				*path = ""
+			}
+
+			ps.Push(n.path, val)
 			goto start
 		}
 	}

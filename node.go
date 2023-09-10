@@ -43,11 +43,13 @@ func (n *node[v]) SetValue(value v) {
 
 func (n *node[v]) AddNode(key string, child *node[v]) {
 	val := key[0]
+
 	if child.param {
 		val = ':'
 	} else if child.wildcard {
 		val = '*'
 	}
+
 	if n.children == nil {
 		n.lut = append(n.lut, val)
 		n.children = make([]*node[v], 0)
@@ -61,34 +63,6 @@ func (n *node[v]) AddNode(key string, child *node[v]) {
 }
 
 func (n *node[v]) matchPath(path *string, ps *Params) bool {
-	if n.param {
-		val := *path
-		idx := -1
-		for i := 0; i < len(*path); i++ {
-			if (*path)[i] == '/' {
-				idx = i
-				break
-			}
-		}
-
-		if idx == -1 {
-			val = *path
-			*path = ""
-		} else {
-			val = (*path)[:idx]
-			*path = (*path)[idx:]
-		}
-
-		ps.Push(n.path, val)
-		return true
-	}
-
-	if n.wildcard {
-		ps.Push(n.path, *path)
-		*path = ""
-		return true
-	}
-
 	pathLen := len(*path)
 	endOfSegmentIndex := -1
 	for i := 0; i < len(*path); i++ {
@@ -113,6 +87,8 @@ func (n *node[v]) matchPath(path *string, ps *Params) bool {
 
 		if idx == -1 {
 			*path = ""
+		} else {
+			*path = (*path)[idx:]
 		}
 
 		return true
