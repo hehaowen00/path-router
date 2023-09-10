@@ -48,7 +48,7 @@ func TestTrie_Github(t *testing.T) {
 	}
 }
 
-func BenchmarkTrie_Github(t *testing.B) {
+func BenchmarkTrie_Github_Single(t *testing.B) {
 	trie := newTrie[int]()
 	bounds := 315
 
@@ -60,9 +60,26 @@ func BenchmarkTrie_Github(t *testing.B) {
 	t.ResetTimer()
 
 	for i := 0; i < t.N; i++ {
-		for _, url := range testURLs[:bounds] {
+		ps := newParams()
+		s := testURLs[i%bounds]
+		trie.Get(&s, ps)
+	}
+}
+
+func BenchmarkTrie_Github_Batched(t *testing.B) {
+	trie := newTrie[int]()
+	bounds := 315
+
+	for i, url := range githubRoutes[:bounds] {
+		trie.Insert(url, i)
+	}
+
+	t.ResetTimer()
+
+	for i := 0; i < t.N; i++ {
+		for _, url := range testURLs {
+			ps := newParams()
 			trie.Get(&url, ps)
-			ps.clear()
 		}
 	}
 }
