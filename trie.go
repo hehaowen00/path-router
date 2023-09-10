@@ -35,14 +35,18 @@ start:
 		return n.value
 	}
 
-	for i, v := range n.lut {
-		if v == (*path)[0] {
-			for _, v := range n.children[i:] {
+	ch := (*path)[0]
+	for i := 0; i < len(n.lut); i++ {
+		v := n.lut[i]
+		if v == ch {
+			for j := i; j < len(n.children); j++ {
+				v := n.children[j]
 				if v.matchPath(path, ps) {
 					n = v
 					goto start
 				}
 			}
+			break
 		}
 	}
 
@@ -61,8 +65,7 @@ start:
 			*path = (*path)[idx:]
 			ps.Push(n.path, val)
 		} else {
-			val := *path
-			ps.Push(n.path, val)
+			ps.Push(n.path, *path)
 			return n.value
 		}
 
