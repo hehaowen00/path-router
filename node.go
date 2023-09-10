@@ -64,31 +64,20 @@ func (n *node[v]) AddNode(key string, child *node[v]) {
 
 func (n *node[v]) matchPath(path *string, ps *Params) bool {
 	pathLen := len(*path)
-	endOfSegmentIndex := -1
+	endOfSegmentIndex := pathLen
 	for i := 0; i < len(*path); i++ {
 		if (*path)[i] == '/' {
 			endOfSegmentIndex = i
 			break
 		}
 	}
-	if endOfSegmentIndex == -1 {
-		endOfSegmentIndex = pathLen
-	}
 
 	nLen := len(n.path)
-	if len((*path)) >= nLen && (*path)[:nLen] == n.path && endOfSegmentIndex == nLen {
-		idx := -1
-		for i := 0; i < len(*path); i++ {
-			if (*path)[i] == '/' {
-				idx = i
-				break
-			}
-		}
-
-		if idx == -1 {
+	if pathLen >= nLen && (*path)[:nLen] == n.path && endOfSegmentIndex == nLen {
+		if endOfSegmentIndex == pathLen-1 {
 			*path = ""
 		} else {
-			*path = (*path)[idx:]
+			*path = (*path)[endOfSegmentIndex:]
 		}
 
 		return true
