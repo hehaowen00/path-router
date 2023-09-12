@@ -5,44 +5,36 @@ import (
 )
 
 type trie[v any] struct {
-	root  *node[v]
-	arena []node[v]
+	root *node[v]
 }
 
 func newTrie[v any]() *trie[v] {
 	trie := trie[v]{
-		root: nil,
+		root: newNode[v](),
 	}
-	trie.root = trie.newNode()
 	return &trie
 }
 
-func (t *trie[v]) newNode() *node[v] {
-	node := node[v]{}
-	t.arena = append(t.arena, node)
-	return &t.arena[len(t.arena)-1]
-}
-
-func (t *trie[v]) Get(path *string, ps *Params) *v {
+func (t *trie[v]) Get(path string, ps *Params) *v {
 	n := t.root
 
-start:
-	if len(*path) > 0 && (*path)[0] == '/' {
-		*path = (*path)[1:]
-	}
-
-	if len(*path) == 0 || *path == "/" {
+	if len(path) == 0 {
 		return n.value
 	}
 
-	ch := (*path)[0]
+start:
+	if path == "/" {
+		return n.value
+	}
+
 	for i := 0; i < len(n.lut); i++ {
 		v := n.lut[i]
-		if v == ch {
+		if v == (path)[1] {
 			for j := i; j < len(n.children); j++ {
 				v := n.children[j]
-				if v.matchPath(path, ps) {
+				if len(path) >= len(v.path) && v.path == (path)[:len(v.path)] {
 					n = v
+					path = (path)[len(v.path)-1:]
 					goto start
 				}
 			}
@@ -53,19 +45,19 @@ start:
 	if n.lut[len(n.lut)-1] == ':' {
 		n = n.children[len(n.lut)-1]
 		idx := -1
-		for i := 0; i < len(*path); i++ {
-			if (*path)[i] == '/' {
+		for i := 1; i < len(path); i++ {
+			if (path)[i] == '/' {
 				idx = i
 				break
 			}
 		}
 
 		if idx > -1 {
-			val := (*path)[:idx]
-			*path = (*path)[idx:]
+			val := (path)[1:idx]
+			path = (path)[idx:]
 			ps.Push(n.path, val)
 		} else {
-			ps.Push(n.path, *path)
+			ps.Push(n.path, path)
 			return n.value
 		}
 
@@ -74,7 +66,7 @@ start:
 
 	if n.lut[len(n.lut)-1] == '*' {
 		n = n.children[len(n.lut)-1]
-		ps.Push(n.path, *path)
+		ps.Push(n.path, path)
 		return n.value
 	}
 
@@ -97,7 +89,7 @@ func (t *trie[v]) Insert(path string, value v) {
 start:
 	if n.children == nil || len(n.children) == 0 {
 		for _, p := range xs {
-			child := t.newNode()
+			child := newNode[v]()
 			child.SetPath(p)
 			n.AddNode(p, child)
 			n = child
@@ -122,7 +114,7 @@ start:
 					goto start
 				}
 			}
-			if v.path == xs[0] {
+			if v.path == "/"+xs[0]+"/" {
 				xs = xs[1:]
 				n = v
 				goto start
@@ -131,7 +123,7 @@ start:
 	}
 
 	for _, p := range xs {
-		child := t.newNode()
+		child := newNode[v]()
 		child.SetPath(p)
 		n.AddNode(p, child)
 		n = child

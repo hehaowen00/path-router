@@ -34,8 +34,11 @@ func (n *node[v]) SetPath(path string) {
 
 	if string(path[0]) == "*" {
 		n.wildcard = true
+		n.path = "*"
+		return
 	}
-	n.path = path
+
+	n.path = "/" + path + "/"
 }
 
 func (n *node[v]) SetValue(value v) {
@@ -61,51 +64,6 @@ func (n *node[v]) AddNode(key string, child *node[v]) {
 	i, _ := slices.BinarySearchFunc(n.children, child, compareNode[v])
 	n.lut = slices.Insert(n.lut, i, val)
 	n.children = slices.Insert(n.children, i, child)
-}
-
-func (n *node[v]) matchPath(path *string, ps *Params) bool {
-	pathLen := len(*path)
-	endOfSegmentIndex := pathLen
-	for i := 0; i < len(*path); i++ {
-		if (*path)[i] == '/' {
-			endOfSegmentIndex = i
-			break
-		}
-	}
-
-	nLen := len(n.path)
-	if pathLen >= nLen && (*path)[:nLen] == n.path && endOfSegmentIndex == nLen {
-		if endOfSegmentIndex == pathLen-1 {
-			*path = ""
-		} else {
-			*path = (*path)[endOfSegmentIndex:]
-		}
-
-		return true
-	}
-
-	return false
-}
-
-func removeSegment(s *string) string {
-	idx := -1
-	for i := 0; i < len(*s); i++ {
-		if (*s)[i] == '/' {
-			idx = i
-			break
-		}
-	}
-
-	if idx == -1 {
-		val := *s
-		*s = ""
-		return val
-	}
-
-	val := (*s)[:idx]
-	*s = (*s)[idx:]
-
-	return val
 }
 
 func compareNode[v any](a, b *node[v]) int {
@@ -134,7 +92,7 @@ func compareNode[v any](a, b *node[v]) int {
 	}
 
 	if a.path == "" || b.path == "" {
-		return strings.Compare(a.path, b.path)
+		return strings.Compare(a.path[1:], b.path[1:])
 	}
 
 	return strings.Compare(a.path, b.path)

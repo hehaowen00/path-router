@@ -2,7 +2,6 @@ package pathrouter
 
 import (
 	"net/http"
-	"strings"
 )
 
 type Router struct {
@@ -25,7 +24,7 @@ func NewRouter() *Router {
 		deleteHandler:  newTrie[HandlerFunc](),
 		connectHandler: newTrie[HandlerFunc](),
 		errorHandler:   make(map[int]HandlerFunc, 0),
-		middleware:     make([]MiddlewareFunc, 0),
+		middleware:     nil,
 	}
 	return &router
 }
@@ -33,20 +32,40 @@ func NewRouter() *Router {
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ps := newParams()
 
-	subTrie := r.getMethodHandler(req.Method)
+	var subTrie *trie[HandlerFunc]
+
+	if req.Method == http.MethodGet {
+		subTrie = r.getHandler
+	} else if req.Method == http.MethodPost {
+		subTrie = r.postHandler
+	} else if req.Method == http.MethodPut {
+		subTrie = r.putHandler
+	} else if req.Method == http.MethodPatch {
+		subTrie = r.patchHandler
+	} else if req.Method == http.MethodDelete {
+		subTrie = r.deleteHandler
+	} else if req.Method == http.MethodConnect {
+		subTrie = r.connectHandler
+	}
+
 	if subTrie == nil {
 		r.useErrorHandler(http.StatusMethodNotAllowed, w, req)
 		return
 	}
 
-	cloned := strings.Clone(req.URL.Path)
-	handler := subTrie.Get(&cloned, ps)
+	url := req.URL.Path
+	if url != "/" {
+		url = url + "/"
+	}
+
+	handler := subTrie.Get(url, ps)
 	if handler == nil {
 		r.useErrorHandler(http.StatusNotFound, w, req)
 		return
 	}
 
-	applyMiddleware(*handler, r.middleware)(w, req, ps)
+	// applyMiddleware(*handler, r.middleware)(w, req, ps)
+	(*handler)(w, req, ps)
 }
 
 func (r *Router) Group(prefix string, callback func(*Group)) {
@@ -55,30 +74,38 @@ func (r *Router) Group(prefix string, callback func(*Group)) {
 }
 
 func (r *Router) Use(middleware ...MiddlewareFunc) {
-	r.middleware = append(r.middleware, middleware...)
+	if r.middleware == nil {
+		r.middleware = append(r.middleware, middleware...)
+	}
 }
 
 func (r *Router) Get(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.getHandler.Insert(path, handler)
 }
 
 func (r *Router) Post(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.postHandler.Insert(path, handler)
 }
 
 func (r *Router) Put(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.putHandler.Insert(path, handler)
 }
 
 func (r *Router) Patch(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.patchHandler.Insert(path, handler)
 }
 
 func (r *Router) Delete(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.deleteHandler.Insert(path, handler)
 }
 
 func (r *Router) Connect(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
 	r.connectHandler.Insert(path, handler)
 }
 
