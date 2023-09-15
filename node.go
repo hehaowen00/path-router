@@ -25,7 +25,7 @@ func newNode[v any]() *node[v] {
 	return &node
 }
 
-func (n *node[v]) SetPath(path string) {
+func (n *node[v]) setPath(path string) {
 	if string(path[0]) == ":" {
 		n.param = true
 		n.path = path[1:]
@@ -41,11 +41,7 @@ func (n *node[v]) SetPath(path string) {
 	n.path = "/" + path + "/"
 }
 
-func (n *node[v]) SetValue(value v) {
-	n.value = &value
-}
-
-func (n *node[v]) AddNode(key string, child *node[v]) {
+func (n *node[v]) addNode(key string, child *node[v]) {
 	val := key[0]
 
 	if child.param {
