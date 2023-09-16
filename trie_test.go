@@ -37,7 +37,7 @@ func TestTrie_Github(t *testing.T) {
 	ps := newParams()
 	for i, url := range testURLs[:bounds] {
 		url = url + "/"
-		res := trie.Get([]byte(url), ps)
+		res := trie.Get(url, ps)
 		if res == nil {
 			t.FailNow()
 		}
@@ -63,7 +63,7 @@ func BenchmarkTrie_Github_Single(t *testing.B) {
 
 	ps := newParams()
 	for i := 0; i < t.N; i++ {
-		trie.Get([]byte(testURLs[i%bounds]), ps)
+		trie.Get(testURLs[i%bounds], ps)
 		ps.clear()
 	}
 }
@@ -81,7 +81,7 @@ func BenchmarkTrie_Github_Batched(t *testing.B) {
 	ps := newParams()
 	for i := 0; i < t.N; i++ {
 		for i := range testURLs {
-			trie.Get([]byte(testURLs[i]), ps)
+			trie.Get(testURLs[i], ps)
 			ps.clear()
 		}
 	}

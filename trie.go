@@ -9,7 +9,8 @@ func newTrie[v any]() *node[v] {
 	return newNode[v]()
 }
 
-func (t *node[v]) Get(path []byte, ps *Params) *v {
+func (t *node[v]) Get(url string, ps *Params) *v {
+	path := unsafeStringToBytes(url)
 	n := t
 
 	index := 0

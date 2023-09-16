@@ -2,6 +2,7 @@ package pathrouter
 
 import (
 	"net/http"
+	"unsafe"
 )
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request, ps *Params)
@@ -22,4 +23,8 @@ func applyMiddleware(handler HandlerFunc, middleware []MiddlewareFunc) HandlerFu
 	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		handler(w, r, ps)
 	}
+}
+
+func unsafeStringToBytes(s string) []byte {
+	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
