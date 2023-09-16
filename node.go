@@ -90,9 +90,5 @@ func compareNode[v any](a, b *node[v]) int {
 		return -1
 	}
 
-	if len(a.path) == 0 || len(b.path) == 0 {
-		return bytes.Compare(a.path[1:], b.path[1:])
-	}
-
 	return bytes.Compare(a.path, b.path)
 }

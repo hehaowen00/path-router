@@ -6,12 +6,12 @@ import (
 )
 
 type Router struct {
-	getHandler     *trie[HandlerFunc]
-	postHandler    *trie[HandlerFunc]
-	putHandler     *trie[HandlerFunc]
-	patchHandler   *trie[HandlerFunc]
-	deleteHandler  *trie[HandlerFunc]
-	connectHandler *trie[HandlerFunc]
+	getHandler     *node[HandlerFunc]
+	postHandler    *node[HandlerFunc]
+	putHandler     *node[HandlerFunc]
+	patchHandler   *node[HandlerFunc]
+	deleteHandler  *node[HandlerFunc]
+	connectHandler *node[HandlerFunc]
 	errorHandler   map[int]HandlerFunc
 	middleware     []MiddlewareFunc
 }
@@ -33,7 +33,7 @@ func NewRouter() *Router {
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ps := newParams()
 
-	var subTrie *trie[HandlerFunc]
+	var subTrie *node[HandlerFunc]
 
 	if req.Method == http.MethodGet {
 		subTrie = r.getHandler
@@ -119,7 +119,7 @@ func (r *Router) Handle(method, path string, handler http.Handler) {
 	r.getMethodHandler(method).Insert(path, h)
 }
 
-func (r *Router) getMethodHandler(method string) *trie[HandlerFunc] {
+func (r *Router) getMethodHandler(method string) *node[HandlerFunc] {
 	if method == http.MethodGet {
 		return r.getHandler
 	} else if method == http.MethodPost {

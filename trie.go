@@ -5,23 +5,12 @@ import (
 	"strings"
 )
 
-type trie[v any] struct {
-	root *node[v]
+func newTrie[v any]() *node[v] {
+	return newNode[v]()
 }
 
-func newTrie[v any]() *trie[v] {
-	trie := trie[v]{
-		root: newNode[v](),
-	}
-	return &trie
-}
-
-func (t *trie[v]) Get(path []byte, ps *Params) *v {
-	n := t.root
-
-	if len(path) == 0 {
-		return n.value
-	}
+func (t *node[v]) Get(path []byte, ps *Params) *v {
+	n := t
 
 	index := 0
 
@@ -87,9 +76,9 @@ start:
 	return nil
 }
 
-func (t *trie[v]) Insert(path string, value v) {
+func (t *node[v]) Insert(path string, value v) {
 	if path == "/" {
-		t.root.value = &value
+		t.value = &value
 		return
 	}
 
@@ -98,7 +87,7 @@ func (t *trie[v]) Insert(path string, value v) {
 		return s != ""
 	})
 
-	n := t.root
+	n := t
 
 start:
 	if n.children == nil || len(n.children) == 0 {
