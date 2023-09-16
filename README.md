@@ -16,6 +16,9 @@ log.Fatal(http.ListenAndServe(":8000", r))
 
 middleware can be added using the `use` method
 
+middleware is applied when the route is inserted and won't change if the `use`
+function is called again
+
 ```go
 func logger(next HandlerFunc) HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {

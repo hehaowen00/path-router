@@ -32,7 +32,7 @@ start:
 
 	for i := 0; i < len(n.lut); i++ {
 		v := n.lut[i]
-		if v == (path)[1] {
+		if v == path[1] {
 			for j := i; j < len(n.children); j++ {
 				v := n.children[j]
 
@@ -60,7 +60,7 @@ start:
 		n = n.children[len(n.lut)-1]
 		idx := -1
 		for i := 1; i < len(path); i++ {
-			if (path)[i] == '/' {
+			if path[i] == '/' {
 				idx = i
 				break
 			}
@@ -68,10 +68,10 @@ start:
 
 		if idx > -1 {
 			path = path[idx:]
-			ps.Push(n.path, index+1)
+			ps.push(n.path, index+1)
 			index = index + idx
 		} else {
-			ps.Push(n.path, index)
+			ps.push(n.path, index)
 			return n.value
 		}
 
@@ -80,7 +80,7 @@ start:
 
 	if n.lut[len(n.lut)-1] == '*' {
 		n = n.children[len(n.lut)-1]
-		ps.Push(n.path, index)
+		ps.push(n.path, index)
 		return n.value
 	}
 
@@ -107,15 +107,15 @@ start:
 
 	for _, v := range n.children {
 		if v.param {
-			if xs[0][0] == byte(':') {
-				v.SetPath(xs[0])
+			if xs[0][0] == ':' {
+				v.setPath(xs[0])
 				xs = xs[1:]
 				n = v
 				goto start
 			}
 		}
 		if v.wildcard {
-			if xs[0][0] == byte('*') {
+			if xs[0][0] == '*' {
 				v.path = []byte("*")
 				xs = xs[1:]
 				n = v
@@ -132,11 +132,11 @@ start:
 insertAll:
 	for _, p := range xs {
 		child := newNode[v]()
-		child.SetPath(p)
-		n.AddNode(p, child)
+		child.setPath(p)
+		n.addNode(p, child)
 		n = child
 	}
-	n.SetValue(value)
+	n.setValue(value)
 }
 
 func filter[t comparable](slice []t, check func(v t) bool) []t {

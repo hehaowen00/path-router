@@ -22,6 +22,7 @@ func (ps *Params) Get(path string, name string) string {
 			if name == "*" {
 				return path[ps.locations[i]:]
 			}
+
 			v := strings.TrimPrefix(path[ps.locations[i]:], "/")
 			idx := len(v)
 			for j := 0; j < len(v); j++ {
@@ -30,6 +31,7 @@ func (ps *Params) Get(path string, name string) string {
 					break
 				}
 			}
+
 			return v[:idx]
 		}
 	}
@@ -37,12 +39,12 @@ func (ps *Params) Get(path string, name string) string {
 	return ""
 }
 
-func (ps *Params) Push(name []byte, pos int) {
+func (ps *Params) push(name []byte, pos int) {
 	ps.locations[ps.len] = pos
 	ps.names[ps.len] = name
 	ps.len++
 }
 
-func (ps *Params) Clear() {
+func (ps *Params) clear() {
 	ps.len = 0
 }

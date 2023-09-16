@@ -1,6 +1,7 @@
 package pathrouter
 
 import (
+	"context"
 	"net/http"
 )
 
@@ -64,7 +65,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// applyMiddleware(*handler, r.middleware)(w, req, ps)
 	(*handler)(w, req, ps)
 }
 
@@ -107,6 +107,20 @@ func (r *Router) Delete(path string, handler HandlerFunc) {
 func (r *Router) Connect(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.connectHandler.Insert(path, handler)
+}
+
+type Key string
+
+const ParamsKey = Key("__ROUTER_PARAMS__")
+
+func (r *Router) Handle(method, path string, handler http.Handler) {
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		ctx := context.WithValue(r.Context(), ParamsKey, ps)
+		r = r.WithContext(ctx)
+		handler.ServeHTTP(w, r)
+	}
+
+	r.getMethodHandler(method).Insert(path, h)
 }
 
 func (r *Router) getMethodHandler(method string) *trie[HandlerFunc] {
