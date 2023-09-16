@@ -11,32 +11,31 @@ func newTrie[v any]() *node[v] {
 
 func (t *node[v]) Get(url string, ps *Params) *v {
 	path := unsafeStringToBytes(url)
-	n := t
-
+	cursor := t
 	index := 0
 
 start:
 	if len(path) == 1 && path[0] == '/' {
-		return n.value
+		return cursor.value
 	}
 
-	for i := 0; i < len(n.lut); i++ {
-		v := n.lut[i]
+	for i := 0; i < len(cursor.lut); i++ {
+		v := cursor.lut[i]
 		if v == path[1] {
-			for j := i; j < len(n.children); j++ {
-				v := n.children[j]
+			for j := i; j < len(cursor.children); j++ {
+				v := cursor.children[j]
 
 				if len(path) < len(v.path) {
 					continue
 				}
 
-				for i := 0; i < len(v.path); i++ {
-					if v.path[i] != path[:len(v.path)][i] {
+				for k := 0; k < len(v.path); k++ {
+					if v.path[k] != path[:len(v.path)][k] {
 						goto end
 					}
 				}
 
-				n = v
+				cursor = v
 				path = path[len(v.path)-1:]
 				index += len(v.path) - 1
 				goto start
@@ -46,32 +45,33 @@ start:
 		}
 	}
 
-	if n.lut[len(n.lut)-1] == ':' {
-		n = n.children[len(n.lut)-1]
-		idx := -1
+	if cursor.lut[len(cursor.lut)-1] == ':' {
+		cursor = cursor.children[len(cursor.lut)-1]
+		end := -1
+
 		for i := 1; i < len(path); i++ {
 			if path[i] == '/' {
-				idx = i
+				end = i
 				break
 			}
 		}
 
-		if idx > -1 {
-			path = path[idx:]
-			ps.push(n.path, index+1)
-			index = index + idx
+		if end > -1 {
+			path = path[end:]
+			ps.push(cursor.path, index+1)
+			index = index + end
 		} else {
-			ps.push(n.path, index)
-			return n.value
+			ps.push(cursor.path, index)
+			return cursor.value
 		}
 
 		goto start
 	}
 
-	if n.lut[len(n.lut)-1] == '*' {
-		n = n.children[len(n.lut)-1]
-		ps.push(n.path, index)
-		return n.value
+	if cursor.lut[len(cursor.lut)-1] == '*' {
+		cursor = cursor.children[len(cursor.lut)-1]
+		ps.push(cursor.path, index)
+		return cursor.value
 	}
 
 	return nil
@@ -88,33 +88,35 @@ func (t *node[v]) Insert(path string, value v) {
 		return s != ""
 	})
 
-	n := t
+	cursor := t
 
 start:
-	if n.children == nil || len(n.children) == 0 {
+	if cursor.children == nil || len(cursor.children) == 0 {
 		goto insertAll
 	}
 
-	for _, v := range n.children {
-		if v.param {
+	for _, child := range cursor.children {
+		if child.param {
 			if xs[0][0] == ':' {
-				v.setPath(xs[0])
+				child.setPath(xs[0])
 				xs = xs[1:]
-				n = v
+				cursor = child
 				goto start
 			}
 		}
-		if v.wildcard {
+
+		if child.wildcard {
 			if xs[0][0] == '*' {
-				v.path = []byte("*")
+				child.path = []byte("*")
 				xs = xs[1:]
-				n = v
+				cursor = child
 				goto start
 			}
 		}
-		if bytes.Equal(v.path, []byte("/"+xs[0]+"/")) {
+
+		if bytes.Equal(child.path, []byte("/"+xs[0]+"/")) {
 			xs = xs[1:]
-			n = v
+			cursor = child
 			goto start
 		}
 	}
@@ -123,20 +125,8 @@ insertAll:
 	for _, p := range xs {
 		child := newNode[v]()
 		child.setPath(p)
-		n.addNode(p, child)
-		n = child
+		cursor.addNode(p, child)
+		cursor = child
 	}
-	n.setValue(value)
-}
-
-func filter[t comparable](slice []t, check func(v t) bool) []t {
-	var result []t
-
-	for _, v := range slice {
-		if check(v) {
-			result = append(result, v)
-		}
-	}
-
-	return result
+	cursor.setValue(value)
 }

@@ -25,6 +25,18 @@ func applyMiddleware(handler HandlerFunc, middleware []MiddlewareFunc) HandlerFu
 	}
 }
 
+func filter[t comparable](slice []t, check func(v t) bool) []t {
+	var result []t
+
+	for _, v := range slice {
+		if check(v) {
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
 func unsafeStringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }

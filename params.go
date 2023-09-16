@@ -5,9 +5,9 @@ import (
 )
 
 type Params struct {
-	locations [32]int
-	names     [32][]byte
-	len       int
+	indices [32]int
+	keys    [32][]byte
+	len     int
 }
 
 func newParams() *Params {
@@ -15,11 +15,11 @@ func newParams() *Params {
 }
 
 func (ps *Params) Get(path string, name string) string {
-	nameBytes := []byte(name)
+	key := unsafeStringToBytes(name)
 
 	for i := 0; i < ps.len; i++ {
-		if bytes.Equal(ps.names[i], nameBytes) {
-			v := path[ps.locations[i]:]
+		if bytes.Equal(ps.keys[i], key) {
+			v := path[ps.indices[i]:]
 			if v[0] == '/' {
 				v = v[1:]
 			}
@@ -44,8 +44,8 @@ func (ps *Params) Get(path string, name string) string {
 }
 
 func (ps *Params) push(name []byte, pos int) {
-	ps.locations[ps.len] = pos
-	ps.names[ps.len] = name
+	ps.indices[ps.len] = pos
+	ps.keys[ps.len] = name
 	ps.len++
 }
 
