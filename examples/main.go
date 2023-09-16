@@ -29,6 +29,10 @@ func main() {
 		fmt.Fprintf(w, "ServeHTTP\n")
 	}))
 
+	r.HandleErr(http.StatusNotFound, func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+		fmt.Fprintf(w, "Page Not Found: %s\n", r.URL.Path)
+	})
+
 	addr := ":8000"
 	log.Printf("started server at %s\n", addr)
 	log.Fatalln(http.ListenAndServe(addr, r))

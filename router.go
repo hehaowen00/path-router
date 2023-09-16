@@ -119,6 +119,10 @@ func (r *Router) Handle(method, path string, handler http.Handler) {
 	r.getMethodHandler(method).Insert(path, h)
 }
 
+func (r *Router) HandleErr(errorCode int, handler HandlerFunc) {
+	r.errorHandler[errorCode] = applyMiddleware(handler, r.middleware)
+}
+
 func (r *Router) getMethodHandler(method string) *node[HandlerFunc] {
 	if method == http.MethodGet {
 		return r.getHandler

@@ -88,6 +88,18 @@ func (w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
 }
 ```
 
+- error handling
+
+error handlers can be registered using `HandleErr`
+
+currently router only uses http.StatusNotFound handler
+
+```go
+r.HandleErr(http.StatusNotFound, func (w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+    fmt.Fprintf(w, "Page Not Found\n")
+})
+```
+
 - routing conflicts
 
 when a parameter and wildcard node are in the same position within the URL,
