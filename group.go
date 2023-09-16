@@ -72,5 +72,9 @@ func (g *Group) Connect(path string, handler HandlerFunc) {
 }
 
 func (g *Group) Use(middleware ...MiddlewareFunc) {
+	if g.middleware != nil {
+		panic("group.Use can be called only once")
+	}
+
 	g.middleware = append(g.middleware, middleware...)
 }

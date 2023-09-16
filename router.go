@@ -27,6 +27,7 @@ func NewRouter() *Router {
 		errorHandler:   make(map[int]HandlerFunc, 0),
 		middleware:     nil,
 	}
+
 	return &router
 }
 
@@ -74,9 +75,11 @@ func (r *Router) Group(prefix string, callback func(*Group)) {
 }
 
 func (r *Router) Use(middleware ...MiddlewareFunc) {
-	if r.middleware == nil {
-		r.middleware = append(r.middleware, middleware...)
+	if r.middleware != nil {
+		panic("router.Use can only be called once")
 	}
+
+	r.middleware = append(r.middleware, middleware...)
 }
 
 func (r *Router) Get(path string, handler HandlerFunc) {

@@ -6,7 +6,7 @@ import (
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request, ps *Params)
 
-type MiddlewareFunc func(HandlerFunc) HandlerFunc
+type MiddlewareFunc func(h HandlerFunc) HandlerFunc
 
 type paramsKey struct{}
 
