@@ -1,22 +1,22 @@
 package pathrouter
 
 import (
+	"bytes"
 	"slices"
-	"strings"
 )
 
 type node[v any] struct {
 	param    bool
 	wildcard bool
-	path     string
 	value    *v
+	path     []byte
 	lut      []byte
 	children []*node[v]
 }
 
 func newNode[v any]() *node[v] {
 	node := node[v]{
-		path:     "",
+		path:     nil,
 		value:    nil,
 		children: nil,
 	}
@@ -27,17 +27,17 @@ func newNode[v any]() *node[v] {
 func (n *node[v]) SetPath(path string) {
 	if string(path[0]) == ":" {
 		n.param = true
-		n.path = path[1:]
+		n.path = []byte(path[1:])
 		return
 	}
 
 	if string(path[0]) == "*" {
 		n.wildcard = true
-		n.path = "*"
+		n.path = []byte("*")
 		return
 	}
 
-	n.path = "/" + path + "/"
+	n.path = []byte("/" + path + "/")
 }
 
 func (n *node[v]) SetValue(value v) {
@@ -90,9 +90,9 @@ func compareNode[v any](a, b *node[v]) int {
 		return -1
 	}
 
-	if a.path == "" || b.path == "" {
-		return strings.Compare(a.path[1:], b.path[1:])
+	if len(a.path) == 0 || len(b.path) == 0 {
+		return bytes.Compare(a.path[1:], b.path[1:])
 	}
 
-	return strings.Compare(a.path, b.path)
+	return bytes.Compare(a.path, b.path)
 }

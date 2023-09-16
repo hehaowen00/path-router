@@ -47,6 +47,8 @@ r.Group("/api", func(g *Group) {
 
 url parameters can be specified by prefixing the url element with a `:`
 
+the maximum number of url parameters is limited to 32
+
 ```
 /hello/:user
 
@@ -57,7 +59,7 @@ the matched values will be stored in the parameter struct in the request context
 
 ```go
 func (w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-    value := ps.Get(":user") // hehaowen00
+    value := ps.Get(r.URL.Path, ":user") // hehaowen00
 }
 ```
 
@@ -75,11 +77,11 @@ urls with wildcards will terminate matching and consume the rest of the url
 /static/js/app/index.min.js
 ```
 
-Wildcards are stored in the parameter struct in the request context
+wildcards are stored in the parameter struct in the request context
 
 ```go
 func (w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-    value := ps.Get("*") // app/index.min.js
+    value := ps.Get(r.URL.Path, "*") // app/index.min.js
 }
 ```
 

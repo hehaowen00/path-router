@@ -58,7 +58,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		url = url + "/"
 	}
 
-	handler := subTrie.Get(url, ps)
+	handler := subTrie.Get([]byte(url), ps)
 	if handler == nil {
 		r.useErrorHandler(http.StatusNotFound, w, req)
 		return

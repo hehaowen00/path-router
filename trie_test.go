@@ -1,6 +1,7 @@
 package pathrouter
 
 import (
+	"log"
 	"strings"
 	"testing"
 )
@@ -15,11 +16,13 @@ func checkParams(path, url string, ps *Params) bool {
 
 	for i := 0; i < len(pathSlice); i++ {
 		if len(pathSlice[i]) > 0 && pathSlice[i][0] == ':' {
-			if ps.Get(pathSlice[i][1:]) != urlSlice[i] {
+			if val := ps.Get(url, pathSlice[i][1:]); val != urlSlice[i] {
+				log.Printf("check param error: path %s wanted %v, got %v\n", url, urlSlice[i], val)
 				return false
 			}
 		}
 	}
+
 	return true
 }
 
@@ -34,7 +37,7 @@ func TestTrie_Github(t *testing.T) {
 	ps := newParams()
 	for i, url := range testURLs[:bounds] {
 		url = url + "/"
-		res := trie.Get(url, ps)
+		res := trie.Get([]byte(url), ps)
 		if res == nil {
 			t.FailNow()
 		}
@@ -44,7 +47,7 @@ func TestTrie_Github(t *testing.T) {
 		if !checkParams(githubRoutes[i], testURLs[i], ps) {
 			t.FailNow()
 		}
-		ps.clear()
+		ps.Clear()
 	}
 }
 
@@ -58,9 +61,10 @@ func BenchmarkTrie_Github_Single(t *testing.B) {
 
 	t.ResetTimer()
 
+	ps := newParams()
 	for i := 0; i < t.N; i++ {
-		ps := newParams()
-		trie.Get(testURLs[i%bounds], ps)
+		trie.Get([]byte(testURLs[i%bounds]), ps)
+		ps.Clear()
 	}
 }
 
@@ -74,10 +78,11 @@ func BenchmarkTrie_Github_Batched(t *testing.B) {
 
 	t.ResetTimer()
 
+	ps := newParams()
 	for i := 0; i < t.N; i++ {
 		for i := range testURLs {
-			ps := newParams()
-			trie.Get(testURLs[i], ps)
+			trie.Get([]byte(testURLs[i]), ps)
+			ps.Clear()
 		}
 	}
 }

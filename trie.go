@@ -1,6 +1,7 @@
 package pathrouter
 
 import (
+	"bytes"
 	"strings"
 )
 
@@ -15,15 +16,17 @@ func newTrie[v any]() *trie[v] {
 	return &trie
 }
 
-func (t *trie[v]) Get(path string, ps *Params) *v {
+func (t *trie[v]) Get(path []byte, ps *Params) *v {
 	n := t.root
 
 	if len(path) == 0 {
 		return n.value
 	}
 
+	index := 0
+
 start:
-	if path == "/" {
+	if len(path) == 1 && path[0] == '/' {
 		return n.value
 	}
 
@@ -32,11 +35,22 @@ start:
 		if v == (path)[1] {
 			for j := i; j < len(n.children); j++ {
 				v := n.children[j]
-				if len(path) >= len(v.path) && v.path == (path)[:len(v.path)] {
-					n = v
-					path = (path)[len(v.path)-1:]
-					goto start
+
+				if len(path) < len(v.path) {
+					continue
 				}
+
+				for i := 0; i < len(v.path); i++ {
+					if v.path[i] != path[:len(v.path)][i] {
+						goto end
+					}
+				}
+
+				n = v
+				path = path[len(v.path)-1:]
+				index += len(v.path) - 1
+				goto start
+			end:
 			}
 			break
 		}
@@ -53,11 +67,11 @@ start:
 		}
 
 		if idx > -1 {
-			val := (path)[1:idx]
-			path = (path)[idx:]
-			ps.Push(n.path, val)
+			path = path[idx:]
+			ps.Push(n.path, index+1)
+			index = index + idx
 		} else {
-			ps.Push(n.path, path)
+			ps.Push(n.path, index)
 			return n.value
 		}
 
@@ -66,7 +80,7 @@ start:
 
 	if n.lut[len(n.lut)-1] == '*' {
 		n = n.children[len(n.lut)-1]
-		ps.Push(n.path, path)
+		ps.Push(n.path, index)
 		return n.value
 	}
 
@@ -88,40 +102,34 @@ func (t *trie[v]) Insert(path string, value v) {
 
 start:
 	if n.children == nil || len(n.children) == 0 {
-		for _, p := range xs {
-			child := newNode[v]()
-			child.SetPath(p)
-			n.AddNode(p, child)
-			n = child
-		}
-		n.SetValue(value)
-		return
-	} else {
-		for _, v := range n.children {
-			if v.param {
-				if xs[0][0] == byte(':') {
-					v.SetPath(xs[0])
-					xs = xs[1:]
-					n = v
-					goto start
-				}
-			}
-			if v.wildcard {
-				if xs[0][0] == byte('*') {
-					v.path = "*"
-					xs = xs[1:]
-					n = v
-					goto start
-				}
-			}
-			if v.path == "/"+xs[0]+"/" {
+		goto insertAll
+	}
+
+	for _, v := range n.children {
+		if v.param {
+			if xs[0][0] == byte(':') {
+				v.SetPath(xs[0])
 				xs = xs[1:]
 				n = v
 				goto start
 			}
 		}
+		if v.wildcard {
+			if xs[0][0] == byte('*') {
+				v.path = []byte("*")
+				xs = xs[1:]
+				n = v
+				goto start
+			}
+		}
+		if bytes.Equal(v.path, []byte("/"+xs[0]+"/")) {
+			xs = xs[1:]
+			n = v
+			goto start
+		}
 	}
 
+insertAll:
 	for _, p := range xs {
 		child := newNode[v]()
 		child.SetPath(p)

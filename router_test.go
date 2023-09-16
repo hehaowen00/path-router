@@ -134,7 +134,7 @@ func TestRouterParams(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		value := ps.Get("value")
+		value := ps.Get(r.URL.Path, "value")
 		success = value == "true"
 	}
 
@@ -156,7 +156,7 @@ func TestRouterHandle(t *testing.T) {
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ps := r.Context().Value(ParamsKey).(*Params)
-		value := ps.Get("value")
+		value := ps.Get(r.URL.Path, "value")
 		success = value == "true"
 	})
 
