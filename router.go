@@ -109,10 +109,6 @@ func (r *Router) Connect(path string, handler HandlerFunc) {
 	r.connectHandler.Insert(path, handler)
 }
 
-type Key string
-
-const ParamsKey = Key("__ROUTER_PARAMS__")
-
 func (r *Router) Handle(method, path string, handler http.Handler) {
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		ctx := context.WithValue(r.Context(), ParamsKey, ps)

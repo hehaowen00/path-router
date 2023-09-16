@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/hehaowen00/path-router"
+	pathrouter "github.com/hehaowen00/path-router"
 )
 
 func main() {
@@ -16,14 +16,18 @@ func main() {
 	})
 
 	r.Get("/hello/:user", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-		value := ps.Get("user")
+		value := ps.Get(r.URL.Path, "user")
 		fmt.Fprintf(w, "Hello, %s!\n", value)
 	})
 
 	r.Get("/static/*", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-		value := ps.Get("*")
+		value := ps.Get(r.URL.Path, "*")
 		fmt.Fprintf(w, "%s\n", value)
 	})
+
+	r.Handle(http.MethodGet, "/handle", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "ServeHTTP\n")
+	}))
 
 	addr := ":8000"
 	log.Printf("started server at %s\n", addr)

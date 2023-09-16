@@ -2,7 +2,6 @@ package pathrouter
 
 import (
 	"bytes"
-	"strings"
 )
 
 type Params struct {
@@ -17,13 +16,18 @@ func newParams() *Params {
 
 func (ps *Params) Get(path string, name string) string {
 	nameBytes := []byte(name)
+
 	for i := 0; i < ps.len; i++ {
 		if bytes.Equal(ps.names[i], nameBytes) {
-			if name == "*" {
-				return path[ps.locations[i]:]
+			v := path[ps.locations[i]:]
+			if v[0] == '/' {
+				v = v[1:]
 			}
 
-			v := strings.TrimPrefix(path[ps.locations[i]:], "/")
+			if name == "*" {
+				return v
+			}
+
 			idx := len(v)
 			for j := 0; j < len(v); j++ {
 				if v[j] == '/' {
