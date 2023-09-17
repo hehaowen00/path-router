@@ -5,13 +5,8 @@ import (
 	"strings"
 )
 
-func newTrie[v any]() *node[v] {
-	return newNode[v]()
-}
-
-func (t *node[v]) Get(url string, ps *Params) *v {
+func (cursor *node[v]) Get(url string, ps *Params) *v {
 	path := unsafeStringToBytes(url)
-	cursor := t
 	index := 0
 
 start:
@@ -56,14 +51,14 @@ start:
 			}
 		}
 
-		if end > -1 {
-			path = path[end:]
-			ps.push(cursor.path, index+1)
-			index = index + end
-		} else {
+		if end == -1 {
 			ps.push(cursor.path, index)
 			return cursor.value
 		}
+
+		path = path[end:]
+		ps.push(cursor.path, index+1)
+		index = index + end
 
 		goto start
 	}
@@ -77,9 +72,9 @@ start:
 	return nil
 }
 
-func (t *node[v]) Insert(path string, value v) {
+func (cursor *node[v]) Insert(path string, value v) {
 	if path == "/" {
-		t.value = &value
+		cursor.value = &value
 		return
 	}
 
@@ -87,8 +82,6 @@ func (t *node[v]) Insert(path string, value v) {
 	xs = filter[string](xs, func(s string) bool {
 		return s != ""
 	})
-
-	cursor := t
 
 start:
 	if cursor.children == nil || len(cursor.children) == 0 {

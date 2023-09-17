@@ -18,12 +18,12 @@ type Router struct {
 
 func NewRouter() *Router {
 	router := Router{
-		getHandler:     newTrie[HandlerFunc](),
-		postHandler:    newTrie[HandlerFunc](),
-		putHandler:     newTrie[HandlerFunc](),
-		patchHandler:   newTrie[HandlerFunc](),
-		deleteHandler:  newTrie[HandlerFunc](),
-		connectHandler: newTrie[HandlerFunc](),
+		getHandler:     newNode[HandlerFunc](),
+		postHandler:    newNode[HandlerFunc](),
+		putHandler:     newNode[HandlerFunc](),
+		patchHandler:   newNode[HandlerFunc](),
+		deleteHandler:  newNode[HandlerFunc](),
+		connectHandler: newNode[HandlerFunc](),
 		errorHandler:   make(map[int]HandlerFunc, 0),
 		middleware:     nil,
 	}

@@ -27,7 +27,7 @@ func checkParams(path, url string, ps *Params) bool {
 }
 
 func TestTrie_Github(t *testing.T) {
-	trie := newTrie[int]()
+	trie := newNode[int]()
 	bounds := 315
 
 	for i, url := range githubRoutes[:bounds] {
@@ -35,24 +35,27 @@ func TestTrie_Github(t *testing.T) {
 	}
 
 	ps := newParams()
-	for i, url := range testURLs[:bounds] {
-		url = url + "/"
-		res := trie.Get(url, ps)
-		if res == nil {
-			t.FailNow()
+
+	for n := 0; n < 3; n++ {
+		for i, url := range testURLs[:bounds] {
+			url = url + "/"
+			res := trie.Get(url, ps)
+			if res == nil {
+				t.FailNow()
+			}
+			if (*res) != i {
+				t.FailNow()
+			}
+			if !checkParams(githubRoutes[i], testURLs[i], ps) {
+				t.FailNow()
+			}
+			ps.clear()
 		}
-		if (*res) != i {
-			t.FailNow()
-		}
-		if !checkParams(githubRoutes[i], testURLs[i], ps) {
-			t.FailNow()
-		}
-		ps.clear()
 	}
 }
 
 func BenchmarkTrie_Github_Single(t *testing.B) {
-	trie := newTrie[int]()
+	trie := newNode[int]()
 	bounds := 315
 
 	for i, url := range githubRoutes[:bounds] {
@@ -69,7 +72,7 @@ func BenchmarkTrie_Github_Single(t *testing.B) {
 }
 
 func BenchmarkTrie_Github_Batched(t *testing.B) {
-	trie := newTrie[int]()
+	trie := newNode[int]()
 	bounds := 315
 
 	for i, url := range githubRoutes[:bounds] {
