@@ -139,6 +139,7 @@ func TestRouterParams(t *testing.T) {
 	}
 
 	router := NewRouter()
+	router.Get("/param/*", h)
 	router.Get(url, h)
 	router.ServeHTTP(w, req)
 

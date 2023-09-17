@@ -15,24 +15,23 @@ start:
 	}
 
 	for i := 0; i < len(cursor.lut); i++ {
-		v := cursor.lut[i]
-		if v == path[1] {
+		if cursor.lut[i] == path[1] {
 			for j := i; j < len(cursor.children); j++ {
-				v := cursor.children[j]
+				child := cursor.children[j]
 
-				if len(path) < len(v.path) {
+				if len(path) < len(child.path) {
 					continue
 				}
 
-				for k := 0; k < len(v.path); k++ {
-					if v.path[k] != path[:len(v.path)][k] {
+				for k := 0; k < len(child.path); k++ {
+					if child.path[k] != path[:len(child.path)][k] {
 						goto end
 					}
 				}
 
-				cursor = v
-				path = path[len(v.path)-1:]
-				index += len(v.path) - 1
+				cursor = child
+				path = path[len(child.path)-1:]
+				index += len(child.path) - 1
 				goto start
 			end:
 			}
@@ -88,21 +87,20 @@ start:
 		goto insertAll
 	}
 
-	for _, child := range cursor.children {
-		if child.param {
+	for i, child := range cursor.children {
+		if child.param || child.wildcard {
 			if xs[0][0] == ':' {
 				child.setPath(xs[0])
-				xs = xs[1:]
+				cursor.lut[i] = ':'
 				cursor = child
+				xs = xs[1:]
 				goto start
 			}
-		}
-
-		if child.wildcard {
 			if xs[0][0] == '*' {
-				child.path = []byte("*")
-				xs = xs[1:]
+				child.setPath("*")
+				cursor.lut[i] = '*'
 				cursor = child
+				xs = xs[1:]
 				goto start
 			}
 		}

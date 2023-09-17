@@ -26,14 +26,16 @@ func newNode[v any]() *node[v] {
 
 func (n *node[v]) setPath(path string) {
 	if path[0] == ':' {
-		n.param = true
 		n.path = []byte(path[1:])
+		n.param = true
+		n.wildcard = false
 		return
 	}
 
 	if path[0] == '*' {
-		n.wildcard = true
 		n.path = []byte("*")
+		n.param = false
+		n.wildcard = true
 		return
 	}
 
