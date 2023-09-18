@@ -20,15 +20,6 @@ func main() {
 		fmt.Fprintf(w, "Hello, %s!\n", value)
 	})
 
-	r.Get("/static/*", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-		value := ps.Get(r.URL.Path, "*")
-		fmt.Fprintf(w, "%s\n", value)
-	})
-
-	r.Handle(http.MethodGet, "/handle", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "ServeHTTP\n")
-	}))
-
 	r.HandleErr(http.StatusNotFound, func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
 		fmt.Fprintf(w, "Page Not Found: %s\n", r.URL.Path)
 	})

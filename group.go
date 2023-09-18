@@ -24,7 +24,7 @@ func newGroup(prefix string) *Group {
 
 	group := Group{
 		prefix:     prefix,
-		middleware: make([]MiddlewareFunc, 0),
+		middleware: nil,
 	}
 
 	return &group

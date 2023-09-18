@@ -11,7 +11,19 @@ func (cursor *node[v]) Get(url string, ps *Params) *v {
 
 start:
 	if len(path) == 1 && path[0] == '/' {
+		if cursor.value == nil {
+			if cursor.lut[len(cursor.lut)-1] == '*' {
+				cursor = cursor.children[len(cursor.lut)-1]
+				ps.push(cursor.path, index)
+				return cursor.value
+			}
+		}
+
 		return cursor.value
+	}
+
+	if len(cursor.lut) == 0 {
+		return nil
 	}
 
 	for i := 0; i < len(cursor.lut); i++ {
