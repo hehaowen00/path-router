@@ -21,6 +21,7 @@ func main() {
 	})
 
 	r.HandleErr(http.StatusNotFound, func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "Page Not Found: %s\n", r.URL.Path)
 	})
 
