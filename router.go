@@ -32,7 +32,7 @@ func NewRouter() *Router {
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	ps := newParams()
+	ps := newParams(req.URL.Path)
 
 	var subTrie *node[HandlerFunc]
 

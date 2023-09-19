@@ -16,7 +16,7 @@ func checkParams(path, url string, ps *Params) bool {
 
 	for i := 0; i < len(pathSlice); i++ {
 		if len(pathSlice[i]) > 0 && pathSlice[i][0] == ':' {
-			if val := ps.Get(url, pathSlice[i][1:]); val != urlSlice[i] {
+			if val := ps.Get(pathSlice[i][1:]); val != urlSlice[i] {
 				log.Printf("check param error: path %s wanted %v, got %v\n", url, urlSlice[i], val)
 				return false
 			}
@@ -34,11 +34,12 @@ func TestTrie_Github(t *testing.T) {
 		trie.Insert(url, i)
 	}
 
-	ps := newParams()
+	ps := newParams("")
 
 	for n := 0; n < 3; n++ {
 		for i, url := range testURLs[:bounds] {
 			url = url + "/"
+			ps.url = url
 			res := trie.Get(url, ps)
 			if res == nil {
 				t.FailNow()
@@ -62,9 +63,9 @@ func BenchmarkTrie_Github_Single(t *testing.B) {
 		trie.Insert(url, i)
 	}
 
+	ps := newParams("")
 	t.ResetTimer()
 
-	ps := newParams()
 	for i := 0; i < t.N; i++ {
 		trie.Get(testURLs[i%bounds], ps)
 		ps.clear()
@@ -79,9 +80,9 @@ func BenchmarkTrie_Github_Batched(t *testing.B) {
 		trie.Insert(url, i)
 	}
 
+	ps := newParams("")
 	t.ResetTimer()
 
-	ps := newParams()
 	for i := 0; i < t.N; i++ {
 		for i := range testURLs {
 			trie.Get(testURLs[i], ps)

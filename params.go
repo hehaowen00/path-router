@@ -8,18 +8,21 @@ type Params struct {
 	indices [32]int
 	keys    [32][]byte
 	len     int
+	url     string
 }
 
-func newParams() *Params {
-	return &Params{}
+func newParams(url string) *Params {
+	return &Params{
+		url: url,
+	}
 }
 
-func (ps *Params) Get(path string, name string) string {
+func (ps *Params) Get(name string) string {
 	key := unsafeStringToBytes(name)
 
 	for i := 0; i < ps.len; i++ {
 		if bytes.Equal(ps.keys[i], key) {
-			v := path[ps.indices[i]:]
+			v := ps.url[ps.indices[i]:]
 			if v[0] == '/' {
 				v = v[1:]
 			}
