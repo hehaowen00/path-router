@@ -4,7 +4,33 @@ import (
 	"log"
 	"strings"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
 )
+
+func TestCompress(t *testing.T) {
+	trie := newNode[int]()
+	trie.Insert2("/a/b/c/:id/d", 0)
+	trie.Insert2("/a/b/c", 1)
+	trie.Insert2("/a/b", 3)
+	trie.Insert2("/b/b/*", 3)
+	spew.Dump(trie)
+	ps := newParams()
+	v := trie.Get2("/a/b/c/1/d/", ps)
+	spew.Dump(v)
+}
+
+// func BenchmarkCompress(t *testing.B) {
+// 	trie := newNode[int]()
+// 	trie.Insert2("/a/b/c/:id/d", 0)
+// 	trie.Insert2("/a/b/c", 1)
+// 	trie.Insert2("/a/b", 3)
+// 	spew.Dump(trie)
+// 	ps := newParams()
+// 	for i := 0; i < t.N; i++ {
+// 		trie.Get2("/a/b/c/1/d/", ps)
+// 	}
+// }
 
 func checkParams(path, url string, ps *Params) bool {
 	pathSlice := strings.Split(path, "/")
@@ -28,18 +54,20 @@ func checkParams(path, url string, ps *Params) bool {
 
 func TestTrie_Github(t *testing.T) {
 	trie := newNode[int]()
-	bounds := 315
+	bounds := 4
 
 	for i, url := range githubRoutes[:bounds] {
-		trie.Insert(url, i)
+		trie.Insert2(url, i)
 	}
+
+	// spew.Dump(trie)
 
 	ps := newParams()
 
 	for n := 0; n < 3; n++ {
 		for i, url := range testURLs[:bounds] {
 			url = url + "/"
-			res := trie.Get(url, ps)
+			res := trie.Get2(url, ps)
 			if res == nil {
 				t.FailNow()
 			}

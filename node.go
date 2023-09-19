@@ -39,7 +39,7 @@ func (n *node[v]) setPath(path string) {
 		return
 	}
 
-	n.path = []byte("/" + path + "/")
+	n.path = []byte(formatPath(path))
 }
 
 func (n *node[v]) setValue(value v) {
@@ -47,7 +47,8 @@ func (n *node[v]) setValue(value v) {
 }
 
 func (n *node[v]) addNode(key string, child *node[v]) {
-	val := key[0]
+	key = formatPath(key)
+	val := key[1]
 
 	if child.param {
 		val = ':'

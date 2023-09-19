@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 func TestRouterGet(t *testing.T) {
@@ -192,6 +194,7 @@ func TestRouterMiddleware(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
+		spew.Dump(router)
 		t.FailNow()
 	}
 }
@@ -199,7 +202,7 @@ func TestRouterMiddleware(t *testing.T) {
 func TestRouterGroup(t *testing.T) {
 	success := false
 
-	url := "/api/test"
+	url := "/api/test/"
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	w := httptest.NewRecorder()
 
@@ -219,6 +222,7 @@ func TestRouterGroup(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
+		spew.Dump(router)
 		t.FailNow()
 	}
 }

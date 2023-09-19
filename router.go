@@ -84,32 +84,32 @@ func (r *Router) Use(middleware ...MiddlewareFunc) {
 
 func (r *Router) Get(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.getHandler.Insert(path, handler)
+	r.getHandler.Insert2(path, handler)
 }
 
 func (r *Router) Post(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.postHandler.Insert(path, handler)
+	r.postHandler.Insert2(path, handler)
 }
 
 func (r *Router) Put(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.putHandler.Insert(path, handler)
+	r.putHandler.Insert2(path, handler)
 }
 
 func (r *Router) Patch(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.patchHandler.Insert(path, handler)
+	r.patchHandler.Insert2(path, handler)
 }
 
 func (r *Router) Delete(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.deleteHandler.Insert(path, handler)
+	r.deleteHandler.Insert2(path, handler)
 }
 
 func (r *Router) Connect(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
-	r.connectHandler.Insert(path, handler)
+	r.connectHandler.Insert2(path, handler)
 }
 
 func (r *Router) Handle(method, path string, handler http.Handler) {

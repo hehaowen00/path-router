@@ -43,7 +43,7 @@ func (g *Group) call(r *Router, callback func(g *Group)) {
 	callback(g)
 	for _, route := range g.routes {
 		handler := applyMiddleware(route.handler, g.middleware)
-		r.getMethodHandler(route.method).Insert(route.path, handler)
+		r.getMethodHandler(route.method).Insert2(route.path, handler)
 	}
 }
 
