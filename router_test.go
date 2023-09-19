@@ -6,6 +6,15 @@ import (
 	"testing"
 )
 
+func TestRouterEmpty(t *testing.T) {
+	url := "/"
+	req := httptest.NewRequest("GET", url, nil)
+	w := httptest.NewRecorder()
+
+	router := NewRouter()
+	router.ServeHTTP(w, req)
+}
+
 func TestRouterGet(t *testing.T) {
 	success := false
 
