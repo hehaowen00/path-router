@@ -16,7 +16,7 @@ func main() {
 	})
 
 	r.Get("/hello/:user", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-		value := ps.Get(r.URL.Path, "user")
+		value := ps.Get("user")
 		fmt.Fprintf(w, "Hello, %s!\n", value)
 	})
 
