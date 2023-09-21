@@ -1,6 +1,7 @@
 package pathrouter
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -228,6 +229,32 @@ func TestRouterGroup(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	if !success {
+		t.FailNow()
+	}
+}
+
+func TestRouterGzip(t *testing.T) {
+	url := "/"
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		w.Write([]byte("Hello, World!"))
+	}
+
+	router := NewRouter()
+	router.Use(GzipMiddleware)
+	router.Get("/", h)
+	router.ServeHTTP(w, req)
+
+	resp := w.Result()
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+		t.FailNow()
+	}
+
+	if string(bytes) != "Hello, World!" {
 		t.FailNow()
 	}
 }

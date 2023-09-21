@@ -16,6 +16,8 @@ type Router struct {
 	middleware     []MiddlewareFunc
 }
 
+var _ http.Handler = (*Router)(nil)
+
 func NewRouter() *Router {
 	router := Router{
 		getHandler:     newNode[HandlerFunc](),
