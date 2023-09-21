@@ -1,6 +1,8 @@
 package pathrouter
 
 import (
+	"compress/gzip"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -236,6 +238,7 @@ func TestRouterGroup(t *testing.T) {
 func TestRouterGzip(t *testing.T) {
 	url := "/"
 	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Add("Accept-Encoding", "gzip,deflate")
 	w := httptest.NewRecorder()
 
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
@@ -248,13 +251,20 @@ func TestRouterGzip(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	resp := w.Result()
-	bytes, err := io.ReadAll(resp.Body)
+
+	if resp.Header.Get("Content-Encoding") != "gzip" {
+		t.FailNow()
+	}
+	r, _ := gzip.NewReader(resp.Body)
+	defer r.Close()
+
+	bytes, err := io.ReadAll(r)
 	if err != nil {
-		t.Fatal(err)
 		t.FailNow()
 	}
 
 	if string(bytes) != "Hello, World!" {
+		fmt.Println(string(bytes))
 		t.FailNow()
 	}
 }
