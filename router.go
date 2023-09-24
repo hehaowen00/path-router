@@ -12,6 +12,7 @@ type Router struct {
 	patchHandler   *node[HandlerFunc]
 	deleteHandler  *node[HandlerFunc]
 	connectHandler *node[HandlerFunc]
+	optionsHandler *node[HandlerFunc]
 	errorHandler   map[int]HandlerFunc
 	middleware     []MiddlewareFunc
 }
@@ -26,6 +27,7 @@ func NewRouter() *Router {
 		patchHandler:   newNode[HandlerFunc](),
 		deleteHandler:  newNode[HandlerFunc](),
 		connectHandler: newNode[HandlerFunc](),
+		optionsHandler: newNode[HandlerFunc](),
 		errorHandler:   make(map[int]HandlerFunc, 0),
 		middleware:     nil,
 	}
@@ -50,6 +52,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		subTrie = r.deleteHandler
 	} else if req.Method == http.MethodConnect {
 		subTrie = r.connectHandler
+	} else if req.Method == http.MethodOptions {
+		subTrie = r.optionsHandler
 	}
 
 	if subTrie == nil {
@@ -141,6 +145,8 @@ func (r *Router) getMethodHandler(method string) *node[HandlerFunc] {
 		return r.deleteHandler
 	} else if method == http.MethodConnect {
 		return r.connectHandler
+	} else if method == http.MethodOptions {
+		return r.optionsHandler
 	}
 	return nil
 }
