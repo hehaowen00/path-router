@@ -138,6 +138,26 @@ func TestRouterConnect(t *testing.T) {
 	}
 }
 
+func TestRouterOptions(t *testing.T) {
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {}
+	router := NewRouter()
+	router.Get("/a", h)
+	router.Post("/a", h)
+	router.Put("/a", h)
+	router.Patch("/a", h)
+	router.Delete("/a", h)
+
+	req := httptest.NewRequest(http.MethodOptions, "/a", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	resp := w.Result()
+	methods := resp.Header.Get("Access-Control-Allow-Methods")
+	if methods != "GET, POST, PUT, PATCH, DELETE" {
+		t.FailNow()
+	}
+}
+
 func TestRouterParams(t *testing.T) {
 	success := false
 

@@ -3,6 +3,7 @@ package pathrouter
 import (
 	"context"
 	"net/http"
+	"strings"
 )
 
 type Router struct {
@@ -31,6 +32,8 @@ func NewRouter() *Router {
 		errorHandler:   make(map[int]HandlerFunc, 0),
 		middleware:     nil,
 	}
+
+	router.optionsHandler.Insert("*", defaultOptionsHandler(&router))
 
 	return &router
 }
@@ -61,10 +64,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	url := req.URL.Path
-	if url != "/" {
-		url = url + "/"
-	}
+	url := formatURL(req.URL.Path)
 
 	handler := subTrie.Get(url, ps)
 	if handler == nil {
@@ -118,6 +118,11 @@ func (r *Router) Connect(path string, handler HandlerFunc) {
 	r.connectHandler.Insert(path, handler)
 }
 
+func (r *Router) Options(path string, handler HandlerFunc) {
+	handler = applyMiddleware(handler, r.middleware)
+	r.optionsHandler.Insert(path, handler)
+}
+
 func (r *Router) Handle(method, path string, handler http.Handler) {
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		ctx := context.WithValue(r.Context(), ParamsKey, ps)
@@ -158,4 +163,46 @@ func (r *Router) useErrorHandler(code int, w http.ResponseWriter, req *http.Requ
 		return
 	}
 	errHandler(w, req, nil)
+}
+
+func defaultOptionsHandler(router *Router) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		valid := []string{}
+
+		url := formatURL(r.URL.Path)
+
+		v := router.getHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "GET")
+		}
+
+		v = router.postHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "POST")
+		}
+
+		v = router.putHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "PUT")
+		}
+
+		v = router.patchHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "PATCH")
+		}
+
+		v = router.deleteHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "DELETE")
+		}
+
+		v = router.connectHandler.Get(url, ps)
+		if v != nil {
+			valid = append(valid, "CONNECT")
+		}
+
+		w.Header().Set("Access-Control-Allow-Methods", strings.Join(valid, ", "))
+		w.WriteHeader(http.StatusOK)
+		w.Write(nil)
+	}
 }

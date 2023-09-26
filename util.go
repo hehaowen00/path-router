@@ -26,3 +26,10 @@ func filter[t comparable](slice []t, check func(v t) bool) []t {
 func unsafeStringToBytes(s string) []byte {
 	return unsafe.Slice(unsafe.StringData(s), len(s))
 }
+
+func formatURL(url string) string {
+	if url != "/" {
+		url = url + "/"
+	}
+	return url
+}
