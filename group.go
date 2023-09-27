@@ -42,8 +42,9 @@ func (g *Group) addRoute(method, path string, handler HandlerFunc) {
 func (g *Group) call(r *Router, callback func(g *Group)) {
 	callback(g)
 	for _, route := range g.routes {
-		handler := applyMiddleware(route.handler, g.middleware)
-		handler = applyMiddleware(route.handler, r.middleware)
+		handler := route.handler
+		handler = applyMiddleware(handler, g.middleware)
+		handler = applyMiddleware(handler, r.middleware)
 		r.getMethodHandler(route.method).Insert(route.path, handler)
 	}
 }

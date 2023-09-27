@@ -201,7 +201,7 @@ func defaultOptionsHandler(router *Router) HandlerFunc {
 			valid = append(valid, "CONNECT")
 		}
 
-		w.Header().Set("Access-Control-Allow-Methods", strings.Join(valid, ", "))
+		w.Header().Set("Allow", strings.Join(valid, ", "))
 		w.WriteHeader(http.StatusOK)
 		w.Write(nil)
 	}
