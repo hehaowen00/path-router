@@ -13,8 +13,27 @@ func applyMiddleware(handler HandlerFunc, middleware []MiddlewareFunc) HandlerFu
 		handler = middleware(handler)
 	}
 
+	return handler
+}
+
+type CorsHandler struct {
+	AllowedOrigins   []string
+	AllowCredentials bool
+}
+
+func (cors *CorsHandler) Middleware(next HandlerFunc) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		handler(w, r, ps)
+		if len(cors.AllowedOrigins) == 0 {
+			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", strings.Join(cors.AllowedOrigins, ","))
+		}
+
+		if cors.AllowCredentials {
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
+
+		next(w, r, ps)
 	}
 }
 

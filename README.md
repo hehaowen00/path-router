@@ -38,12 +38,15 @@ groups in path router allow url path prefixing and middleware scoped to urls
 ```go
 r := pathrouter.NewRouter()
 
-r.Group("/api", func(g *Group) {
-    g.Use(logger)
+api := r.Scope("/api")
+api.Use(logger)
 
-    // GET /api/users
-    g.Get("/users", getUsers)
-})
+usersAPI := api.Scope("/users")
+usersAPI.Use(auth)
+
+usersAPI.Get("/", getUsers)
+usersAPI.Post("/", postUsers)
+usersAPI.Delete("/", postUsers)
 ```
 
 - url params

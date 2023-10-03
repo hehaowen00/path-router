@@ -237,15 +237,16 @@ func TestRouterMiddleware(t *testing.T) {
 
 func TestRouterGroup(t *testing.T) {
 	success := false
+	success2 := false
 	routerMiddleware := false
 	groupMiddleware := false
 
-	url := "/api/test"
-	req := httptest.NewRequest(http.MethodGet, url, nil)
-	w := httptest.NewRecorder()
-
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		success = true
+	}
+
+	h2 := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		success2 = true
 	}
 
 	nilHandler := func(w http.ResponseWriter, r *http.Request, ps *Params) {
@@ -266,16 +267,39 @@ func TestRouterGroup(t *testing.T) {
 	}
 
 	router := NewRouter()
-	router.Get("/hello", nilHandler)
 	router.Use(routerLevel)
-	router.Group("/api", func(g *Group) {
-		g.Use(groupLevel)
-		g.Get("/test", h)
-	})
 
+	router.Get("/hello", nilHandler)
+
+	api := router.Scope("/api")
+	api.Use(groupLevel)
+	api.Get("/test", h)
+
+	t1 := router.Scope("/t1")
+	t1.Use(groupLevel)
+
+	t2 := t1.Scope("/t2")
+	t2.Get("/test", h2)
+
+	url := "/api/test"
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
 	if !routerMiddleware || !groupMiddleware || !success {
+		log.Println(routerMiddleware, groupMiddleware, success)
+		t.FailNow()
+	}
+
+	routerMiddleware = false
+	groupMiddleware = false
+
+	url = "/t1/t2/test"
+	req = httptest.NewRequest(http.MethodGet, url, nil)
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if !routerMiddleware || !groupMiddleware || !success2 {
 		log.Println(routerMiddleware, groupMiddleware, success)
 		t.FailNow()
 	}
@@ -313,7 +337,4 @@ func TestRouterGzip(t *testing.T) {
 		fmt.Println(string(bytes))
 		t.FailNow()
 	}
-}
-
-func TestCorsMiddleware(t *testing.T) {
 }

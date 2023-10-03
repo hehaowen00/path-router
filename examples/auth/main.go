@@ -17,7 +17,7 @@ func basicAuth(next pathrouter.HandlerFunc) pathrouter.HandlerFunc {
 			return
 		}
 
-		if user != "admin" && pass != "password" {
+		if user != "admin" || pass != "password" {
 			w.WriteHeader(http.StatusUnauthorized)
 			fmt.Fprintf(w, "Unauthorized")
 			return
@@ -35,14 +35,13 @@ func main() {
 		fmt.Fprintf(w, "Hello, World!\n")
 	})
 
-	r.Group("/", func(g *pathrouter.Group) {
-		g.Use(basicAuth)
-		g.Get(
-			"/protected",
-			func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-				fmt.Fprintf(w, "Protected\n")
-			})
-	})
+	protected := r.Scope("/")
+	protected.Use(basicAuth)
+	protected.Get(
+		"/protected",
+		func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+			fmt.Fprintf(w, "Protected\n")
+		})
 
 	addr := ":8000"
 	log.Printf("started server at %s\n", addr)

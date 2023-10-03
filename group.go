@@ -2,81 +2,79 @@ package pathrouter
 
 import (
 	"net/http"
-	"strings"
 )
 
-type Group struct {
+type Scope struct {
 	prefix     string
 	middleware []MiddlewareFunc
-	routes     []route
+	routes     IRoutes
 }
 
-type route struct {
-	method  string
-	path    string
-	handler HandlerFunc
-}
-
-func newGroup(prefix string) *Group {
+func newScope(router IRoutes, prefix string) *Scope {
 	if prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 
-	group := Group{
+	group := Scope{
 		prefix:     prefix,
 		middleware: nil,
+		routes:     router,
 	}
 
 	return &group
 }
 
-func (g *Group) addRoute(method, path string, handler HandlerFunc) {
-	g.prefix = strings.TrimSuffix(g.prefix, "/")
-	g.routes = append(g.routes, route{
-		method:  method,
-		path:    g.prefix + "/" + strings.TrimPrefix(path, "/"),
-		handler: handler,
-	})
+func (s *Scope) Handle(method, path string, handler http.Handler) {
+	s.routes.Handle(method, path, handler)
 }
 
-func (g *Group) call(r *Router, callback func(g *Group)) {
-	callback(g)
-	for _, route := range g.routes {
-		handler := route.handler
-		handler = applyMiddleware(handler, g.middleware)
-		handler = applyMiddleware(handler, r.middleware)
-		r.getMethodHandler(route.method).Insert(route.path, handler)
-	}
+func (s *Scope) Use(middleware MiddlewareFunc) {
+	s.middleware = append(s.middleware, middleware)
 }
 
-func (g *Group) Get(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodGet, path, handler)
+func (s *Scope) Scope(prefix string) IRoutes {
+	s2 := newScope(s, prefix)
+	return s2
 }
 
-func (g *Group) Post(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodPost, path, handler)
+func (s *Scope) Get(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Get(p, h)
 }
 
-func (g *Group) Put(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodPut, path, handler)
+func (s *Scope) Post(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Post(p, h)
 }
 
-func (g *Group) Patch(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodPatch, path, handler)
+func (s *Scope) Put(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Put(p, h)
 }
 
-func (g *Group) Delete(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodDelete, path, handler)
+func (s *Scope) Patch(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Patch(p, h)
 }
 
-func (g *Group) Connect(path string, handler HandlerFunc) {
-	g.addRoute(http.MethodConnect, path, handler)
+func (s *Scope) Delete(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Delete(p, h)
 }
 
-func (g *Group) Use(middleware ...MiddlewareFunc) {
-	if g.middleware != nil {
-		panic("group.Use can be called only once")
-	}
+func (s *Scope) Connect(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Connect(p, h)
+}
 
-	g.middleware = append(g.middleware, middleware...)
+func (s *Scope) Options(path string, handler HandlerFunc) {
+	h := applyMiddleware(handler, s.middleware)
+	p := joinURL(s.prefix, path)
+	s.routes.Options(p, h)
 }

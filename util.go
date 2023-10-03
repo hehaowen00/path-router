@@ -33,3 +33,24 @@ func formatURL(url string) string {
 	}
 	return url
 }
+
+func joinURL(lhs, rhs string) string {
+	if lhs == "" {
+		return rhs
+	}
+	if rhs == "" {
+		return lhs
+	}
+
+	final := lhs
+
+	if final[len(final)-1:] != "/" {
+		final = final + "/"
+	}
+
+	if rhs[:1] == "/" {
+		final = final + rhs[1:]
+	}
+
+	return final
+}

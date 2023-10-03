@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Router struct {
+type pathRouter struct {
 	getHandler     *node[HandlerFunc]
 	postHandler    *node[HandlerFunc]
 	putHandler     *node[HandlerFunc]
@@ -18,10 +18,10 @@ type Router struct {
 	middleware     []MiddlewareFunc
 }
 
-var _ http.Handler = (*Router)(nil)
+var _ http.Handler = (*pathRouter)(nil)
 
-func NewRouter() *Router {
-	router := Router{
+func NewRouter() IRouter {
+	router := pathRouter{
 		getHandler:     newNode[HandlerFunc](),
 		postHandler:    newNode[HandlerFunc](),
 		putHandler:     newNode[HandlerFunc](),
@@ -38,7 +38,7 @@ func NewRouter() *Router {
 	return &router
 }
 
-func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (r *pathRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ps := newParams(req.URL.Path)
 
 	var subTrie *node[HandlerFunc]
@@ -75,55 +75,51 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	(*handler)(w, req, ps)
 }
 
-func (r *Router) Group(prefix string, callback func(*Group)) {
-	g := newGroup(prefix)
-	g.call(r, callback)
+func (r *pathRouter) Scope(prefix string) IRoutes {
+	g := newScope(r, prefix)
+	return g
 }
 
-func (r *Router) Use(middleware ...MiddlewareFunc) {
-	if r.middleware != nil {
-		panic("router.Use can only be called once")
-	}
-
-	r.middleware = append(r.middleware, middleware...)
+func (r *pathRouter) Use(middleware MiddlewareFunc) {
+	r.middleware = append(r.middleware, middleware)
 }
 
-func (r *Router) Get(path string, handler HandlerFunc) {
+func (r *pathRouter) Get(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.getHandler.Insert(path, handler)
 }
 
-func (r *Router) Post(path string, handler HandlerFunc) {
+func (r *pathRouter) Post(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.postHandler.Insert(path, handler)
 }
 
-func (r *Router) Put(path string, handler HandlerFunc) {
+func (r *pathRouter) Put(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.putHandler.Insert(path, handler)
 }
 
-func (r *Router) Patch(path string, handler HandlerFunc) {
+func (r *pathRouter) Patch(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.patchHandler.Insert(path, handler)
 }
 
-func (r *Router) Delete(path string, handler HandlerFunc) {
+func (r *pathRouter) Delete(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.deleteHandler.Insert(path, handler)
 }
 
-func (r *Router) Connect(path string, handler HandlerFunc) {
+func (r *pathRouter) Connect(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.connectHandler.Insert(path, handler)
 }
 
-func (r *Router) Options(path string, handler HandlerFunc) {
+func (r *pathRouter) Options(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.optionsHandler.Insert(path, handler)
 }
 
-func (r *Router) Handle(method, path string, handler http.Handler) {
+func (r *pathRouter) Handle(method, path string, handler http.Handler) {
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		ctx := context.WithValue(r.Context(), ParamsKey, ps)
 		r = r.WithContext(ctx)
@@ -133,11 +129,11 @@ func (r *Router) Handle(method, path string, handler http.Handler) {
 	r.getMethodHandler(method).Insert(path, h)
 }
 
-func (r *Router) HandleErr(errorCode int, handler HandlerFunc) {
+func (r *pathRouter) HandleErr(errorCode int, handler HandlerFunc) {
 	r.errorHandler[errorCode] = applyMiddleware(handler, r.middleware)
 }
 
-func (r *Router) getMethodHandler(method string) *node[HandlerFunc] {
+func (r *pathRouter) getMethodHandler(method string) *node[HandlerFunc] {
 	if method == http.MethodGet {
 		return r.getHandler
 	} else if method == http.MethodPost {
@@ -156,7 +152,7 @@ func (r *Router) getMethodHandler(method string) *node[HandlerFunc] {
 	return nil
 }
 
-func (r *Router) useErrorHandler(code int, w http.ResponseWriter, req *http.Request) {
+func (r *pathRouter) useErrorHandler(code int, w http.ResponseWriter, req *http.Request) {
 	errHandler := r.errorHandler[http.StatusNotFound]
 	if errHandler == nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -165,7 +161,7 @@ func (r *Router) useErrorHandler(code int, w http.ResponseWriter, req *http.Requ
 	errHandler(w, req, nil)
 }
 
-func defaultOptionsHandler(router *Router) HandlerFunc {
+func defaultOptionsHandler(router *pathRouter) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		valid := []string{}
 
