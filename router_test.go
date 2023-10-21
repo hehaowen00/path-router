@@ -338,3 +338,31 @@ func TestRouterGzip(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestPathOrder(t *testing.T) {
+	success := false
+
+	router := NewRouter()
+	router.Get("/a/:b", func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		success = true
+	})
+	router.Get("/a", func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		success = true
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/a/b", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+	if !success {
+		t.FailNow()
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/a", nil)
+	w = httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+	if !success {
+		t.FailNow()
+	}
+}
