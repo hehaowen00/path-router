@@ -95,6 +95,11 @@ func (cursor *node[v]) Insert(path string, value v) {
 	})
 
 start:
+	if len(xs) == 0 {
+		cursor.setValue(value)
+		return
+	}
+
 	if cursor.children == nil || len(cursor.children) == 0 {
 		goto insertAll
 	}
