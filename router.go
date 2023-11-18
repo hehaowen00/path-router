@@ -198,8 +198,6 @@ func defaultOptionsHandler(router *pathRouter) HandlerFunc {
 			valid = append(valid, "CONNECT")
 		}
 
-		w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Allow", strings.Join(valid, ", "))
 
 		w.WriteHeader(http.StatusOK)
