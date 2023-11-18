@@ -82,6 +82,7 @@ func (r *pathRouter) Scope(prefix string) IRoutes {
 
 func (r *pathRouter) Use(middleware MiddlewareFunc) {
 	r.middleware = append(r.middleware, middleware)
+	r.optionsHandler.Insert("*", applyMiddleware(defaultOptionsHandler(r), r.middleware))
 }
 
 func (r *pathRouter) Get(path string, handler HandlerFunc) {
