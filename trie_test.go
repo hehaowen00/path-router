@@ -26,6 +26,27 @@ func checkParams(path, url string, ps *Params) bool {
 	return true
 }
 
+func TestTrie_1(t *testing.T) {
+	trie := newNode[int]()
+	ps := newParams("")
+
+	trie.Insert("/a/*/", 1)
+	val := trie.Get("/a/", ps)
+
+	if val != nil {
+		t.Log("expected nil value, got ", *val)
+		t.FailNow()
+	}
+
+	trie.Insert("/a", 2)
+	val = trie.Get("/a/", ps)
+
+	if val == nil {
+		t.Log("expected value, got ", val)
+		t.FailNow()
+	}
+}
+
 func TestTrie_Github(t *testing.T) {
 	trie := newNode[int]()
 	bounds := 315

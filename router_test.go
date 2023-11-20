@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -22,19 +24,32 @@ func TestRouterEmpty(t *testing.T) {
 func TestRouterGet(t *testing.T) {
 	success := false
 
-	url := "/get"
-	req := httptest.NewRequest("GET", url, nil)
-	w := httptest.NewRecorder()
+	req1 := httptest.NewRequest("GET", "/b", nil)
+
+	url := "/a"
+	req2 := httptest.NewRequest("GET", url, nil)
 
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 		success = true
 	}
 
 	router := NewRouter()
-	router.Get(url, h)
-	router.ServeHTTP(w, req)
+	router.Get("/a/*", h)
+	router.Get("/b/", h)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req1)
 
 	if !success {
+		t.FailNow()
+	}
+
+	success = false
+
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req2)
+
+	if success {
 		t.FailNow()
 	}
 }
@@ -142,27 +157,28 @@ func TestRouterConnect(t *testing.T) {
 func TestRouterOptions(t *testing.T) {
 	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
 	}
-	router := NewRouter()
-	router.Get("/a", h)
-	router.Post("/a", h)
-	router.Put("/a", h)
-	router.Patch("/a", h)
-	router.Delete("/a", h)
 
-	req := httptest.NewRequest(http.MethodGet, "/a", nil)
+	r := NewRouter()
+	r.Get("/a", h)
+	r.Post("/a", h)
+	r.Put("/a", h)
+	r.Patch("/a", h)
+	r.Delete("/a", h)
+
+	req := httptest.NewRequest(http.MethodOptions, "/a", nil)
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
-	req = httptest.NewRequest(http.MethodOptions, "/a", nil)
-	w = httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	resp := w.Result()
+	methods := resp.Header.Get("Allow")
+	methodsArray := strings.Split(strings.ReplaceAll(methods, " ", ""), ",")
 
-	// resp := w.Result()
-	// methods := resp.Header.Get("Access-Control-Allow-Methods")
-	// if methods != "GET, POST, PUT, PATCH, DELETE" {
-	// 	log.Println(methods)
-	// 	t.FailNow()
-	// }
+	for _, method := range []string{"GET", "POST", "PUT", "PATCH", "DELETE"} {
+		if !slices.Contains(methodsArray, method) {
+			log.Printf("error missing %s in %v\n", method, methodsArray)
+			t.FailNow()
+		}
+	}
 }
 
 func TestRouterParams(t *testing.T) {

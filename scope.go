@@ -15,13 +15,13 @@ func newScope(router IRoutes, prefix string) *Scope {
 		prefix = "/" + prefix
 	}
 
-	group := Scope{
+	s := Scope{
 		prefix:     prefix,
 		middleware: nil,
 		routes:     router,
 	}
 
-	return &group
+	return &s
 }
 
 func (s *Scope) Handle(method, path string, handler http.Handler) {

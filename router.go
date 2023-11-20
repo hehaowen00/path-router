@@ -14,6 +14,7 @@ type pathRouter struct {
 	deleteHandler  *node[HandlerFunc]
 	connectHandler *node[HandlerFunc]
 	optionsHandler *node[HandlerFunc]
+	optionsTable   *node[arraySet]
 	errorHandler   map[int]HandlerFunc
 	middleware     []MiddlewareFunc
 }
@@ -29,6 +30,7 @@ func NewRouter() IRouter {
 		deleteHandler:  newNode[HandlerFunc](),
 		connectHandler: newNode[HandlerFunc](),
 		optionsHandler: newNode[HandlerFunc](),
+		optionsTable:   newNode[arraySet](),
 		errorHandler:   make(map[int]HandlerFunc, 0),
 		middleware:     nil,
 	}
@@ -88,31 +90,37 @@ func (r *pathRouter) Use(middleware MiddlewareFunc) {
 func (r *pathRouter) Get(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.getHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodGet)
 }
 
 func (r *pathRouter) Post(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.postHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodPost)
 }
 
 func (r *pathRouter) Put(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.putHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodPut)
 }
 
 func (r *pathRouter) Patch(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.patchHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodPatch)
 }
 
 func (r *pathRouter) Delete(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.deleteHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodDelete)
 }
 
 func (r *pathRouter) Connect(path string, handler HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.connectHandler.Insert(path, handler)
+	addMethod(r, path, http.MethodConnect)
 }
 
 func (r *pathRouter) Options(path string, handler HandlerFunc) {
@@ -164,43 +172,33 @@ func (r *pathRouter) useErrorHandler(code int, w http.ResponseWriter, req *http.
 
 func defaultOptionsHandler(router *pathRouter) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		valid := []string{}
-
 		url := formatURL(r.URL.Path)
 
-		v := router.getHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "GET")
+		set := router.optionsTable.Get(url, ps)
+		if set == nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(nil)
+			return
 		}
 
-		v = router.postHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "POST")
-		}
-
-		v = router.putHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "PUT")
-		}
-
-		v = router.patchHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "PATCH")
-		}
-
-		v = router.deleteHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "DELETE")
-		}
-
-		v = router.connectHandler.Get(url, ps)
-		if v != nil {
-			valid = append(valid, "CONNECT")
-		}
-
-		w.Header().Set("Allow", strings.Join(valid, ", "))
-
+		w.Header().Set("Allow", strings.Join(set.data, ", "))
 		w.WriteHeader(http.StatusOK)
 		w.Write(nil)
 	}
+}
+
+func addMethod(r *pathRouter, path, method string) {
+	ps := newParams(path)
+
+	set := r.optionsTable.Get(formatURL(path), ps)
+
+	if set == nil {
+		set := newArraySet()
+		set.insert(method)
+
+		r.optionsTable.Insert(path, set)
+		return
+	}
+
+	(*set).insert(method)
 }
