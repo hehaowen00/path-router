@@ -14,8 +14,8 @@ import (
 func main() {
 	r := pathrouter.NewRouter()
 
-	r.Get("/*", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
-		path := ps.Get("*")
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		path := r.PathValue("*")
 
 		if strings.Contains(path, "..") {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)

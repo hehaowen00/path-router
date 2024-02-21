@@ -1,11 +1,8 @@
 package pathrouter
 
 import (
-	"net/http"
 	"unsafe"
 )
-
-type HandlerFunc func(w http.ResponseWriter, r *http.Request, ps *Params)
 
 type paramsKey struct{}
 

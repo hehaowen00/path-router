@@ -29,7 +29,7 @@ func TestRouterGet(t *testing.T) {
 	url := "/a"
 	req2 := httptest.NewRequest("GET", url, nil)
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -61,7 +61,7 @@ func TestRouterPost(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -81,7 +81,7 @@ func TestRouterPut(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -101,7 +101,7 @@ func TestRouterPatch(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPatch, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -121,7 +121,7 @@ func TestRouterDelete(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -141,7 +141,7 @@ func TestRouterConnect(t *testing.T) {
 	req := httptest.NewRequest(http.MethodConnect, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
@@ -155,7 +155,7 @@ func TestRouterConnect(t *testing.T) {
 }
 
 func TestRouterOptions(t *testing.T) {
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r := NewRouter()
@@ -188,8 +188,8 @@ func TestRouterParams(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/param/true", nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		value := ps.Get("value")
+	h := func(w http.ResponseWriter, r *http.Request) {
+		value := r.PathValue("value")
 		success = value == "true"
 	}
 
@@ -211,8 +211,7 @@ func TestRouterHandle(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ps := r.Context().Value(ParamsKey).(*Params)
-		value := ps.Get("value")
+		value := r.PathValue("value")
 		success = value == "true"
 	})
 
@@ -232,11 +231,11 @@ func TestRouterMiddleware(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 	}
 
-	middleware := func(next HandlerFunc) HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	middleware := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			success = true
 		}
 	}
@@ -257,28 +256,28 @@ func TestRouterGroup(t *testing.T) {
 	routerMiddleware := false
 	groupMiddleware := false
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	}
 
-	h2 := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h2 := func(w http.ResponseWriter, r *http.Request) {
 		success2 = true
 	}
 
-	nilHandler := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	nilHandler := func(w http.ResponseWriter, r *http.Request) {
 	}
 
-	routerLevel := func(next HandlerFunc) HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	routerLevel := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			routerMiddleware = true
-			next(w, r, ps)
+			next(w, r)
 		}
 	}
 
-	groupLevel := func(next HandlerFunc) HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	groupLevel := func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			groupMiddleware = true
-			next(w, r, ps)
+			next(w, r)
 		}
 	}
 
@@ -327,7 +326,7 @@ func TestRouterGzip(t *testing.T) {
 	req.Header.Add("Accept-Encoding", "gzip,deflate")
 	w := httptest.NewRecorder()
 
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	h := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	}
 
@@ -359,10 +358,10 @@ func TestPathOrder(t *testing.T) {
 	success := false
 
 	router := NewRouter()
-	router.Get("/a/:b", func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	router.Get("/a/:b", func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	})
-	router.Get("/a", func(w http.ResponseWriter, r *http.Request, ps *Params) {
+	router.Get("/a", func(w http.ResponseWriter, r *http.Request) {
 		success = true
 	})
 
