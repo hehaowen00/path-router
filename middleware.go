@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-type MiddlewareFunc func(next HandlerFunc) HandlerFunc
+type MiddlewareFunc func(next http.HandlerFunc) http.HandlerFunc
 
-func applyMiddleware(handler HandlerFunc, middleware []MiddlewareFunc) HandlerFunc {
+func applyMiddleware(handler http.HandlerFunc, middleware []MiddlewareFunc) http.HandlerFunc {
 	for _, middleware := range middleware {
 		handler = middleware(handler)
 	}
@@ -21,8 +21,8 @@ type CorsHandler struct {
 	AllowCredentials bool
 }
 
-func (cors *CorsHandler) Middleware(next HandlerFunc) HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+func (cors *CorsHandler) Middleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if len(cors.AllowedOrigins) == 0 {
 			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		} else {
@@ -33,7 +33,7 @@ func (cors *CorsHandler) Middleware(next HandlerFunc) HandlerFunc {
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
 
-		next(w, r, ps)
+		next(w, r)
 	}
 }
 
@@ -46,8 +46,8 @@ func (rw GZipResponseWriter) Write(data []byte) (int, error) {
 	return rw.writer.Write(data)
 }
 
-func GzipMiddleware(next HandlerFunc) HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+func GzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		value := r.Header.Get("Accept-Encoding")
 		if strings.Contains(value, "gzip") {
 			w.Header().Add("Content-Encoding", "gzip")
@@ -60,9 +60,9 @@ func GzipMiddleware(next HandlerFunc) HandlerFunc {
 				writer:         gzipWriter,
 			}
 
-			next(rw, r, ps)
+			next(rw, r)
 		} else {
-			next(w, r, ps)
+			next(w, r)
 		}
 	}
 }

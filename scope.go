@@ -37,43 +37,43 @@ func (s *Scope) Scope(prefix string) IRoutes {
 	return s2
 }
 
-func (s *Scope) Get(path string, handler HandlerFunc) {
+func (s *Scope) Get(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Get(p, h)
 }
 
-func (s *Scope) Post(path string, handler HandlerFunc) {
+func (s *Scope) Post(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Post(p, h)
 }
 
-func (s *Scope) Put(path string, handler HandlerFunc) {
+func (s *Scope) Put(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Put(p, h)
 }
 
-func (s *Scope) Patch(path string, handler HandlerFunc) {
+func (s *Scope) Patch(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Patch(p, h)
 }
 
-func (s *Scope) Delete(path string, handler HandlerFunc) {
+func (s *Scope) Delete(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Delete(p, h)
 }
 
-func (s *Scope) Connect(path string, handler HandlerFunc) {
+func (s *Scope) Connect(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Connect(p, h)
 }
 
-func (s *Scope) Options(path string, handler HandlerFunc) {
+func (s *Scope) Options(path string, handler http.HandlerFunc) {
 	h := applyMiddleware(handler, s.middleware)
 	p := joinURL(s.prefix, path)
 	s.routes.Options(p, h)

@@ -8,8 +8,8 @@ import (
 	pathrouter "github.com/hehaowen00/path-router"
 )
 
-func basicAuth(next pathrouter.HandlerFunc) pathrouter.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+func basicAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -24,14 +24,14 @@ func basicAuth(next pathrouter.HandlerFunc) pathrouter.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		next(w, r, ps)
+		next(w, r)
 	}
 }
 
 func main() {
 	r := pathrouter.NewRouter()
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!\n")
 	})
 
@@ -39,7 +39,7 @@ func main() {
 	protected.Use(basicAuth)
 	protected.Get(
 		"/protected",
-		func(w http.ResponseWriter, r *http.Request, ps *pathrouter.Params) {
+		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Protected\n")
 		})
 

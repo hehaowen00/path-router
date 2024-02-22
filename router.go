@@ -1,21 +1,20 @@
 package pathrouter
 
 import (
-	"context"
 	"net/http"
 	"strings"
 )
 
 type pathRouter struct {
-	getHandler     *node[HandlerFunc]
-	postHandler    *node[HandlerFunc]
-	putHandler     *node[HandlerFunc]
-	patchHandler   *node[HandlerFunc]
-	deleteHandler  *node[HandlerFunc]
-	connectHandler *node[HandlerFunc]
-	optionsHandler *node[HandlerFunc]
+	getHandler     *node[http.HandlerFunc]
+	postHandler    *node[http.HandlerFunc]
+	putHandler     *node[http.HandlerFunc]
+	patchHandler   *node[http.HandlerFunc]
+	deleteHandler  *node[http.HandlerFunc]
+	connectHandler *node[http.HandlerFunc]
+	optionsHandler *node[http.HandlerFunc]
 	optionsTable   *node[arraySet]
-	errorHandler   map[int]HandlerFunc
+	errorHandler   map[int]http.HandlerFunc
 	middleware     []MiddlewareFunc
 }
 
@@ -23,15 +22,15 @@ var _ http.Handler = (*pathRouter)(nil)
 
 func NewRouter() IRouter {
 	router := pathRouter{
-		getHandler:     newNode[HandlerFunc](),
-		postHandler:    newNode[HandlerFunc](),
-		putHandler:     newNode[HandlerFunc](),
-		patchHandler:   newNode[HandlerFunc](),
-		deleteHandler:  newNode[HandlerFunc](),
-		connectHandler: newNode[HandlerFunc](),
-		optionsHandler: newNode[HandlerFunc](),
+		getHandler:     newNode[http.HandlerFunc](),
+		postHandler:    newNode[http.HandlerFunc](),
+		putHandler:     newNode[http.HandlerFunc](),
+		patchHandler:   newNode[http.HandlerFunc](),
+		deleteHandler:  newNode[http.HandlerFunc](),
+		connectHandler: newNode[http.HandlerFunc](),
+		optionsHandler: newNode[http.HandlerFunc](),
 		optionsTable:   newNode[arraySet](),
-		errorHandler:   make(map[int]HandlerFunc, 0),
+		errorHandler:   make(map[int]http.HandlerFunc, 0),
 		middleware:     nil,
 	}
 
@@ -43,7 +42,7 @@ func NewRouter() IRouter {
 func (r *pathRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ps := newParams(req.URL.Path)
 
-	var subTrie *node[HandlerFunc]
+	var subTrie *node[http.HandlerFunc]
 
 	if req.Method == http.MethodGet {
 		subTrie = r.getHandler
@@ -74,7 +73,12 @@ func (r *pathRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	(*handler)(w, req, ps)
+	for _, k := range ps.keys {
+		key := string(k)
+		req.SetPathValue(key, ps.Get(key))
+	}
+
+	(*handler)(w, req)
 }
 
 func (r *pathRouter) Scope(prefix string) IRoutes {
@@ -87,62 +91,60 @@ func (r *pathRouter) Use(middleware MiddlewareFunc) {
 	r.optionsHandler.Insert("*", applyMiddleware(defaultOptionsHandler(r), r.middleware))
 }
 
-func (r *pathRouter) Get(path string, handler HandlerFunc) {
+func (r *pathRouter) Get(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.getHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodGet)
 }
 
-func (r *pathRouter) Post(path string, handler HandlerFunc) {
+func (r *pathRouter) Post(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.postHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodPost)
 }
 
-func (r *pathRouter) Put(path string, handler HandlerFunc) {
+func (r *pathRouter) Put(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.putHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodPut)
 }
 
-func (r *pathRouter) Patch(path string, handler HandlerFunc) {
+func (r *pathRouter) Patch(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.patchHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodPatch)
 }
 
-func (r *pathRouter) Delete(path string, handler HandlerFunc) {
+func (r *pathRouter) Delete(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.deleteHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodDelete)
 }
 
-func (r *pathRouter) Connect(path string, handler HandlerFunc) {
+func (r *pathRouter) Connect(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.connectHandler.Insert(path, handler)
 	addMethod(r, path, http.MethodConnect)
 }
 
-func (r *pathRouter) Options(path string, handler HandlerFunc) {
+func (r *pathRouter) Options(path string, handler http.HandlerFunc) {
 	handler = applyMiddleware(handler, r.middleware)
 	r.optionsHandler.Insert(path, handler)
 }
 
 func (r *pathRouter) Handle(method, path string, handler http.Handler) {
-	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
-		ctx := context.WithValue(r.Context(), ParamsKey, ps)
-		r = r.WithContext(ctx)
+	h := func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
 
 	r.getMethodHandler(method).Insert(path, h)
 }
 
-func (r *pathRouter) HandleErr(errorCode int, handler HandlerFunc) {
+func (r *pathRouter) HandleErr(errorCode int, handler http.HandlerFunc) {
 	r.errorHandler[errorCode] = applyMiddleware(handler, r.middleware)
 }
 
-func (r *pathRouter) getMethodHandler(method string) *node[HandlerFunc] {
+func (r *pathRouter) getMethodHandler(method string) *node[http.HandlerFunc] {
 	if method == http.MethodGet {
 		return r.getHandler
 	} else if method == http.MethodPost {
@@ -167,12 +169,13 @@ func (r *pathRouter) useErrorHandler(code int, w http.ResponseWriter, req *http.
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
-	errHandler(w, req, nil)
+	errHandler(w, req)
 }
 
-func defaultOptionsHandler(router *pathRouter) HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, ps *Params) {
+func defaultOptionsHandler(router *pathRouter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		url := formatURL(r.URL.Path)
+		ps := newParams(url)
 
 		set := router.optionsTable.Get(url, ps)
 		if set == nil {
