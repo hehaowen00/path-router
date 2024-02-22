@@ -31,7 +31,7 @@ func TestTrie_1(t *testing.T) {
 	ps := newParams("")
 
 	trie.Insert("/a/*/", 1)
-	val := trie.Get("/a/", ps)
+	val := trie.Get("/a", ps)
 
 	if val != nil {
 		t.Log("expected nil value, got ", *val)

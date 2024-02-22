@@ -21,6 +21,26 @@ func TestRouterEmpty(t *testing.T) {
 	router.ServeHTTP(w, req)
 }
 
+func TestRouterDefault(t *testing.T) {
+	success := false
+
+	url := "/"
+	req := httptest.NewRequest("GET", url, nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		success = true
+	}
+
+	router := NewRouter()
+	router.Get("/", h)
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.FailNow()
+	}
+}
+
 func TestRouterGet(t *testing.T) {
 	success := false
 
@@ -35,7 +55,7 @@ func TestRouterGet(t *testing.T) {
 
 	router := NewRouter()
 	router.Get("/a/*", h)
-	router.Get("/b/", h)
+	router.Get("/b", h)
 
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req1)
@@ -195,6 +215,48 @@ func TestRouterParams(t *testing.T) {
 
 	router := NewRouter()
 	router.Get("/param/*", h)
+	router.Get(url, h)
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.FailNow()
+	}
+}
+
+func TestRouterParams2(t *testing.T) {
+	success := false
+
+	url := "/*"
+	req := httptest.NewRequest(http.MethodGet, "/true", nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		value := ps.Get("*")
+		success = value == "true"
+	}
+
+	router := NewRouter()
+	router.Get(url, h)
+	router.ServeHTTP(w, req)
+
+	if !success {
+		t.FailNow()
+	}
+}
+
+func TestRouterParams3(t *testing.T) {
+	success := false
+
+	url := "/*"
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+
+	h := func(w http.ResponseWriter, r *http.Request, ps *Params) {
+		value := ps.Get("*")
+		success = value == ""
+	}
+
+	router := NewRouter()
 	router.Get(url, h)
 	router.ServeHTTP(w, req)
 
