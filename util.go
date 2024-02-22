@@ -4,10 +4,6 @@ import (
 	"unsafe"
 )
 
-type paramsKey struct{}
-
-var ParamsKey = paramsKey{}
-
 func filter[t comparable](slice []t, check func(v t) bool) []t {
 	var result []t
 
