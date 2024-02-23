@@ -12,14 +12,14 @@ func basicAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, "Unauthorized")
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		if user != "admin" || pass != "password" {
 			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, "Unauthorized")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
