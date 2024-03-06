@@ -133,12 +133,7 @@ func (r *pathRouter) Options(path string, handler http.HandlerFunc) {
 }
 
 func (r *pathRouter) Handle(method, path string, handler http.Handler) {
-	h := func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-
-	h = applyMiddleware(h, r.middleware)
-
+	h := applyMiddleware(handler.ServeHTTP, r.middleware)
 	r.getMethodHandler(method).Insert(path, h)
 }
 

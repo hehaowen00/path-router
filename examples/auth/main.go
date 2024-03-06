@@ -43,7 +43,7 @@ func main() {
 			fmt.Fprintf(w, "Protected\n")
 		})
 
-	addr := ":8000"
-	log.Printf("started server at %s\n", addr)
+	addr := "localhost:8000"
+	log.Printf("started server at http://%s\n", addr)
 	log.Fatalln(http.ListenAndServe(addr, r))
 }

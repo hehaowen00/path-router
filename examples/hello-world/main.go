@@ -11,6 +11,15 @@ import (
 func main() {
 	r := pathrouter.NewRouter()
 
+	r.Use(func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			log.Println(r.Method, r.URL)
+			next(w, r)
+		}
+	})
+
+	r.Use(pathrouter.GzipMiddleware)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!\n")
 	})
@@ -25,7 +34,7 @@ func main() {
 		fmt.Fprintf(w, "Page Not Found: %s\n", r.URL.Path)
 	})
 
-	addr := ":8000"
-	log.Printf("started server at %s\n", addr)
+	addr := "localhost:8000"
+	log.Printf("started server at http://%s\n", addr)
 	log.Fatalln(http.ListenAndServe(addr, r))
 }
