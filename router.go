@@ -137,6 +137,8 @@ func (r *pathRouter) Handle(method, path string, handler http.Handler) {
 		handler.ServeHTTP(w, r)
 	}
 
+	h = applyMiddleware(h, r.middleware)
+
 	r.getMethodHandler(method).Insert(path, h)
 }
 
